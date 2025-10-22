@@ -1,0 +1,51 @@
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "discoship"
+description = "Utilities to create/manage shipping policies for discogs.com"
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.11"
+dynamic = ["version"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "beautifulsoup4",
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest", 
+    "pytest-cov", 
+    "flake8",
+    "twine",
+]
+
+[tool.setuptools]
+packages = [
+    "discoship",
+    "discoship.usps",
+]
+
+script-files = [
+    "bin/discoship",
+]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
+
+[tool.setuptools.package-data]
+discoship = [
+    "VERSION",
+]
+
+[tool.coverage.report]
+skip_empty = true  # exclude empty __init__.py files from report
+show_missing = true  # include missing lines in coverage report

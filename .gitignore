@@ -1,0 +1,9 @@
+/venv*
+*.egg-info
+/build
+/dist
+.coverage
+.idea/
+bin/_pycache_/
+*/__pycache__/
+*/*/__pycache__/
