@@ -17,14 +17,18 @@ DISCOSHIP_EPILOG = """
 
 DiscoShipArgParser = argparse.ArgumentParser(description=DISCOSHIP_DESC,
                                              epilog=DISCOSHIP_EPILOG)
-DiscoShipArgParser.add_argument('-v', '--verbose', action='store_true',
-                                help='increases output')
 DiscoShipArgParser.add_argument('-p', '--provider', default=DEFAULT_PROVIDER,
                                 help=f'Shipping provider (default {DEFAULT_PROVIDER})')
+DiscoShipArgParser.add_argument('-d', '--debug', action='store_true',
+                                help='increases loglevel output')
 DiscoShipArgParser.add_argument('--version', action='version', version=VERSION,
                                 help='show version and exit')
 subparsers = DiscoShipArgParser.add_subparsers(dest='action', help='subcommands')
 
+# TODO? fetchers/db ingest/selectors should have provider-specific args/attrs
+# $ discoship fetch usps       cpg       --service=...
+# $ discoship fetch canadapost destcodes --service=...
+# https://sqlpey.com/python/top-strategies-for-parsing-nested-sub-commands/
 FetchArgParser = subparsers.add_parser('fetch', help='fetch external data sources')
 FetchArgParser.add_argument('--all', action='store_true',
                             help='Fetch all data')
@@ -47,11 +51,10 @@ def func_importer(func_path):
 def delegate_args(args):
     provider = args.provider
     action = args.action
-    func_path = f'discoship.{provider}.{action}.{action}'
+    func_path = f'discoship.{provider.lower()}.{action.lower()}.{action.lower()}'
     log.info(f'loading func_path {func_path}')
     func = func_importer(func_path)
     log.info(f'loaded da func {func}')
     if action == 'fetch':
-        func(fetchall=args.all, cpg=args.cpg, rates=args.rates,
-             service=args.service, verbose=args.verbose)
+        func(fetchall=args.all, cpg=args.cpg, rates=args.rates, service=args.service)
 
