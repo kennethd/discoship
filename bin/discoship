@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+import sys
+
+from discoship.cli import DiscoShipArgParser, delegate_args
+
+args = DiscoShipArgParser.parse_args()
+print(args, file=sys.stderr)
+delegate_args(args)
