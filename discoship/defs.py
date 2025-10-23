@@ -19,6 +19,13 @@ USPS_SVC_AIRLIFT = "ISAL"
 DEFAULT_PROVIDER = "USPS"
 DEFAULT_SERVICE = USPS_SVC_FCPIS
 
-with open(os.path.sep.join([os.path.dirname(__file__), 'VERSION']), 'r') as fh:
+PKG_PATH = os.path.dirname(__file__)
+REPO_PATH = os.path.dirname(PKG_PATH)
+
+with open(os.path.sep.join([PKG_PATH, 'VERSION']), 'r') as fh:
     VERSION = fh.read().strip()
 
+# init'ed db is included with package repo
+DB_PATH = os.path.sep.join([PKG_PATH, 'data', 'discoship.db'])
+DB_SCHEMA_PATH = os.path.sep.join([PKG_PATH, 'data', 'discoship.ddl'])
+DB_INIT_PATH = os.path.sep.join([PKG_PATH, 'data', 'init.sql'])

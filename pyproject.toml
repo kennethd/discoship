@@ -44,6 +44,9 @@ version = {file = "VERSION"}
 [tool.setuptools.package-data]
 discoship = [
     "VERSION",
+    "sql/discoship.db",
+    "sql/discoship.ddl",
+    "sql/init.sql",
 ]
 
 [tool.coverage.report]

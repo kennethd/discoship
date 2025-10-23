@@ -2,6 +2,7 @@ import bs4
 import logging
 import re
 
+from discoship.db import executemany
 from discoship.defs import DEFAULT_SERVICE
 from discoship.io import fetch_url
 
@@ -11,6 +12,15 @@ log = logging.getLogger(__name__)
 
 CPG_DATA_URL = "https://pe.usps.com/text/dmm300/Notice123.htm"
 CPG_HEADER_TEXT = "Country Price Groups"
+
+# usps_cpg primary key is (country_name, usps_service_code); to allow
+# updates without rebuilding db from scratch, do UPSERT on conflict
+INSERT_USPS_CPG = """
+  INSERT INTO usps_cpg (country_name, usps_service_code, price_group)
+  VALUES (?, ?, ?)
+  ON CONFLICT (country_name, usps_service_code)
+  DO UPDATE SET price_group = excluded.price_group;
+"""
 
 
 # there is not a single <div> enclosing only the Country Price Groups
@@ -103,17 +113,33 @@ def fetch_cpg_data(url=CPG_DATA_URL, service=DEFAULT_SERVICE):
         #print(parsed_cpg_data)
         cpg_data.update(parsed_cpg_data)
     log.info(f'Fetched {len(cpg_data)} Country Price Groups')
+    #print(cpg_data)
     return cpg_data
 
 
 def ingest_cpg_data(cpg_data, service=DEFAULT_SERVICE):
-    pass
+    """insert fetched cpg_data into usps_cpg table
 
-
-def init_cpg_schema():
-    pass
-
-
-def drop_cpg_schema():
-    pass
+    exposed by cli via `fetch` subcommand:
+    ```
+    $ discoship fetch --cpg
+    ```
+    to verify success (reqs installed sqlite3 package for client):
+    ```
+    $ sqlite3 discoship/data/discoship.db "SELECT COUNT(*) FROM usps_cpg;"
+    219
+    $ sqlite3 discoship/data/discoship.db ".headers on" ".mode column" "select * from usps_cpg limit 3;"
+    country_name         usps_service_code  price_group
+    -------------------  -----------------  -----------
+    Afghanistan          FCPIS              4
+    Albania              FCPIS              3
+    Algeria              FCPIS              5
+    ```"""
+    log.debug(f'ingest_cpg_data: service={service} {cpg_data}')
+    # incoming cpg_data is formatted as:
+    # {'Afghanistan': '4', 'Albania': '3', 'Algeria': '5', ...}
+    vals = [ (k, service, v) for k, v in cpg_data.items() ]
+    #print(vals)
+    rowcount = executemany(INSERT_USPS_CPG, vals)
+    log.info(f'ingest_cpg_data: updated {rowcount} rows')
 
