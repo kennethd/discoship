@@ -2,7 +2,7 @@ import bs4
 import logging
 import re
 
-from discoship.db import executemany
+from discoship.db import execute, executemany, selectone
 from discoship.defs import DEFAULT_SERVICE
 from discoship.io import fetch_url
 
@@ -20,6 +20,15 @@ INSERT_USPS_CPG = """
   VALUES (?, ?, ?)
   ON CONFLICT (country_name, usps_service_code)
   DO UPDATE SET price_group = excluded.price_group;
+"""
+
+UPDATE_LAST_INGEST_DATE = """
+  UPDATE prefs SET value = DATETIME('now')
+  WHERE name = 'last_ingest_usps_cpg';
+"""
+
+SELECT_LAST_INGEST_DATE = """
+  SELECT value FROM prefs WHERE name = 'last_ingest_usps_cpg';
 """
 
 
@@ -142,4 +151,8 @@ def ingest_cpg_data(cpg_data, service=DEFAULT_SERVICE):
     #print(vals)
     rowcount = executemany(INSERT_USPS_CPG, vals)
     log.info(f'ingest_cpg_data: updated {rowcount} rows')
+    rowcount = execute(UPDATE_LAST_INGEST_DATE)
+    assert rowcount == 1
+    row = selectone(SELECT_LAST_INGEST_DATE)
+    log.info(f'updated last_ingest_usps_cpg: {row[0]} (UTC)')
 
