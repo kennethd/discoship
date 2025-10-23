@@ -20,6 +20,16 @@ CREATE TABLE usps_cpg(
 );
 CREATE INDEX idx_usps_cpg_price_group ON usps_cpg(price_group);
 
+DROP TABLE IF EXISTS usps_fcpis_rates;
+CREATE TABLE usps_fcpis_rates(
+    price_group INTEGER NOT NULL,
+    weight_group_1 INTEGER NOT NULL,  -- up to 8oz
+    weight_group_2 INTEGER NOT NULL,  -- up to 32oz
+    weight_group_3 INTEGER NOT NULL,  -- up to 48oz
+    weight_group_4 INTEGER NOT NULL,  -- up to 64oz
+    PRIMARY KEY (price_group)
+);
+
 -- sqlite as kvs: https://sqlite.org/flextypegood.html
 DROP TABLE IF EXISTS prefs;
 CREATE TABLE prefs(name TEXT PRIMARY KEY, value) WITHOUT ROWID;

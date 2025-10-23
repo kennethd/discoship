@@ -13,6 +13,7 @@ VALUES
 INSERT INTO prefs VALUES
 -- SELECT DATETIME('now') returns the current UTC datetime
 ("last_ingest_usps_cpg", NULL),
+("last_ingest_usps_fcpis_rates", NULL),
 -- https://faq.usps.com/s/article/Certificate-of-Mailing-The-Basics
 -- "Only available at a Post Office location"
 -- https://www.usps.com/international/insurance-extra-services.htm

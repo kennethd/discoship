@@ -153,7 +153,7 @@ def dbinit():
 
     drops any existing tables & recreates schema
 
-    executes sql/discoship.ddl & sql/init.sql files"""
+    executes data/discoship.ddl & data/init.sql files"""
     executefile(DB_SCHEMA_PATH)
     executefile(DB_INIT_PATH)
 
