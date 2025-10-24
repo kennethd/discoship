@@ -23,12 +23,12 @@ INSERT_USPS_CPG = """
 """
 
 UPDATE_LAST_INGEST_DATE = """
-  UPDATE prefs SET value = DATETIME('now')
+  UPDATE config SET value = DATETIME('now')
   WHERE name = 'last_ingest_usps_cpg';
 """
 
 SELECT_LAST_INGEST_DATE = """
-  SELECT value FROM prefs WHERE name = 'last_ingest_usps_cpg';
+  SELECT value FROM config WHERE name = 'last_ingest_usps_cpg';
 """
 
 
@@ -129,9 +129,9 @@ def fetch_cpg_data(url=CPG_DATA_URL, service=DEFAULT_SERVICE):
 def ingest_cpg_data(cpg_data, service=DEFAULT_SERVICE):
     """insert fetched cpg_data into usps_cpg table
 
-    exposed by cli via `fetch` subcommand:
+    exposed by cli via `ingest` subcommand:
     ```
-    $ discoship fetch --cpg
+    $ discoship ingest usps --cpg
     ```
     to verify success (reqs installed sqlite3 package for client):
     ```

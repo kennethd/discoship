@@ -2,7 +2,7 @@ from contextlib import contextmanager
 import logging
 import sqlite3
 
-from discoship.defs import DB_PATH, DB_SCHEMA_PATH, DB_INIT_PATH;
+from discoship.defs import DB_PATH, SQL_INGEST_PATH, SQL_DISCOGS_PATH, SQL_CONFIG_PATH
 
 
 log = logging.getLogger(__name__)
@@ -151,9 +151,35 @@ def selectone(sql, params=None):
 def dbinit():
     """initialize fresh db
 
-    drops any existing tables & recreates schema
+    * * * WARNING: DESTROYS ALL DATA * * *
+    drops all existing tables & recreates schema"""
+    executefile(SQL_INGEST_PATH)
+    executefile(SQL_DISCOGS_PATH)
+    executefile(SQL_CONFIG_PATH)
 
-    executes data/discoship.ddl & data/init.sql files"""
-    executefile(DB_SCHEMA_PATH)
-    executefile(DB_INIT_PATH)
+
+def recreate_ingest_tables():
+    """drops and recreates tables for data ingested from external sources
+
+    ALL INGEST SCRIPTS WILL NEED TO BE RE-RUN
+
+    Does not destroy user-modified data"""
+    executefile(SQL_INGEST_PATH)
+    executefile(SQL_DISCOGS_PATH)
+
+
+def reset_config():
+    """drops & recreates config table
+
+    ALL USER DEFINED CONFIGS WILL BE LOST
+
+    Consider backing up your config first"""
+    executefile(SQL_CONFIG_PATH)
+
+
+def dump_config():
+    """selects everything from config table for backup/display"""
+    rows = select("SELECT * FROM config")
+    config = { row[0]: row[1] for row in rows }
+    return config
 

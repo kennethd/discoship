@@ -1,8 +1,9 @@
 import argparse
 import importlib
 import logging
+from pprint import pprint
 
-from discoship.db import dbinit
+from discoship.db import dbinit, dump_config, reset_config, recreate_ingest_tables
 from discoship.defs import DEFAULT_PROVIDER, DEFAULT_SERVICE, VERSION
 
 
@@ -13,7 +14,7 @@ DISCOSHIP_DESC = """
     utility for creating international discogs.com shipping policies
 """
 DISCOSHIP_EPILOG = """
-    For help with subcommands, do `discoship {subcommand} --help`
+    For help with nested subcommands, do `discoship {subcommand} --help`
 """
 
 DiscoShipArgParser = argparse.ArgumentParser(description=DISCOSHIP_DESC,
@@ -24,27 +25,37 @@ DiscoShipArgParser.add_argument('--version', action='version', version=VERSION,
                                 help='show version and exit')
 actions = DiscoShipArgParser.add_subparsers(dest='action', help='subcommands')
 
-# TODO? fetchers/db ingest/selectors should have provider-specific args/attrs
-# $ discoship fetch usps       cpg       --service=...
-# $ discoship fetch canadapost destcodes --service=...
-# https://sqlpey.com/python/top-strategies-for-parsing-nested-sub-commands/
-FetchArgParser = actions.add_parser('fetch', help='fetch external data sources')
-FetchArgParser.add_argument('--provider', default=DEFAULT_PROVIDER,
-                            help=f'Shipping provider (default {DEFAULT_PROVIDER})')
-FetchArgParser.add_argument('--service', default=DEFAULT_SERVICE,
-                            help=f'Shipping service (default {DEFAULT_SERVICE})')
-FetchArgParser.add_argument('--all', action='store_true',
-                            help='Fetch all data')
-FetchArgParser.add_argument('--cpg', action='store_true',
-                            help='Country Price Group')
-FetchArgParser.add_argument('--rates', action='store_true',
-                            help='Rates for Price Group by Weight')
+IngestArgParser = actions.add_parser('ingest', help='ingest external data sources')
+providers = IngestArgParser.add_subparsers(dest='provider', help='data source')
+
+UspsArgParser = providers.add_parser('usps', help='US Postal Service')
+UspsArgParser.add_argument('--service', default=DEFAULT_SERVICE,
+                           help=f'Shipping service (default {DEFAULT_SERVICE})')
+UspsArgParser.add_argument('--all', action='store_true',
+                           help='Ingest all data')
+UspsArgParser.add_argument('--cpg', action='store_true',
+                           help='Country Price Group')
+UspsArgParser.add_argument('--rates', action='store_true',
+                           help='Rates for Price Group by Weight')
+
+# not as useful as expected; no shipping policy stuff is exposed via API
+DiscogsArgParser = providers.add_parser('discogs', help='ingest data from discogs API')
+DiscogsArgParser.add_argument('--destinations', action='store_true',
+                              help='Ingest Discogs Destination Countries')
 
 InitArgParser = actions.add_parser('init', help='initialize resources')
 InitArgParser.add_argument('--db', action='store_true',
-                           help='recreate db from scratch [WARNING: DESTROYS ALL DATA]')
+                           help='recreate entire db from scratch [WARNING: DESTROYS ALL DATA]')
+InitArgParser.add_argument('--reset-ingest-tables', action='store_true',
+                           help='drop & recreate ingest tables; you will have to re-run ingest commands')
 InitArgParser.add_argument('--api', action='store_true',
                            help='configure access to discogs.com API')
+
+ConfigArgParser = actions.add_parser('config', help='manage config')
+ConfigArgParser.add_argument('--dump', action='store_true',
+                             help='display current config')
+ConfigArgParser.add_argument('--reset', action='store_true',
+                             help='reset config to defaults')
 
 
 def func_importer(func_path):
@@ -59,11 +70,23 @@ def func_importer(func_path):
 
 def delegate_args(args):
     log.debug(f'delegate_args: {args}')
-    if args.action == 'init':
+    if args.action == 'config':
+        if args.reset:
+            print("For reference, this was your config before reset:")
+            pprint(dump_config())
+            reset_config()
+        elif args.dump:
+            pprint(dump_config())
+    elif args.action == 'init':
         if args.db:
             dbinit()
-    elif args.action == 'fetch':
+        elif args.reset_ingest_tables:
+            recreate_ingest_tables()
+    elif args.action == 'ingest':
         func_path = f'discoship.{args.provider.lower()}.fetch.fetch'
         func = func_importer(func_path)
-        func(fetchall=args.all, cpg=args.cpg, rates=args.rates, service=args.service)
+        if args.provider == 'discogs':
+            func()
+        elif args.provider == 'usps':
+            func(fetchall=args.all, cpg=args.cpg, rates=args.rates, service=args.service)
 

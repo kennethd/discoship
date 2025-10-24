@@ -19,28 +19,28 @@ FCPIS_RATE_TABLE_HEADER_TEXT = "First-Class Package International Service Price 
 INSERT_USPS_FCPIS_RATES = """
   INSERT INTO usps_fcpis_rates (
     price_group,
-    weight_group_1,
-    weight_group_2,
-    weight_group_3,
-    weight_group_4
+    weight_to_8oz,
+    weight_to_32oz,
+    weight_to_48oz,
+    weight_to_64oz
   )
   VALUES (?, ?, ?, ?, ?)
   ON CONFLICT (price_group)
   DO UPDATE SET
-    weight_group_1 = excluded.weight_group_1,
-    weight_group_2 = excluded.weight_group_2,
-    weight_group_3 = excluded.weight_group_3,
-    weight_group_4 = excluded.weight_group_4
+    weight_to_8oz = excluded.weight_to_8oz,
+    weight_to_32oz = excluded.weight_to_32oz,
+    weight_to_48oz = excluded.weight_to_48oz,
+    weight_to_64oz = excluded.weight_to_64oz
 ;
 """
 
 UPDATE_LAST_INGEST_DATE = """
-  UPDATE prefs SET value = DATETIME('now')
+  UPDATE config SET value = DATETIME('now')
   WHERE name = 'last_ingest_usps_fcpis_rates';
 """
 
 SELECT_LAST_INGEST_DATE = """
-  SELECT value FROM prefs WHERE name = 'last_ingest_usps_fcpis_rates';
+  SELECT value FROM config WHERE name = 'last_ingest_usps_fcpis_rates';
 """
 
 
@@ -140,16 +140,16 @@ def fetch_fcpis_rates_data(url=RATE_TABLE_URL):
 def ingest_fcpis_rates_data(rates_data):
     """insert fetched rates_data into usps_fcpis_rates table
 
-    exposed by cli via `fetch` subcommand:
+    exposed by cli via `ingest` subcommand:
     ```
-    $ discoship fetch --rates
+    $ discoship ingest usps --rates
     ```
     to verify success (reqs installed sqlite3 package for client):
     ```
     $ sqlite3 discoship/data/discoship.db "SELECT COUNT(*) FROM usps_fcpis_rates;"
     20
     $ sqlite3 discoship/data/discoship.db ".headers on" ".mode column" "select * from usps_fcpis_rates limit 3;"
-    price_group  weight_group_1  weight_group_2  weight_group_3  weight_group_4
+    price_group  weight_to_8oz   weight_to_32oz  weight_to_48oz  weight_to_64oz
     -----------  --------------  --------------  --------------  --------------
     1            17.85           26              38.5            47.6
     2            18.05           26.6            39              51.05

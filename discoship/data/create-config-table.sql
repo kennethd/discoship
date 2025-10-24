@@ -1,19 +1,12 @@
--- initial inserts
+-- sqlite as kvs: https://sqlite.org/flextypegood.html
+DROP TABLE IF EXISTS config;
+CREATE TABLE config(name TEXT PRIMARY KEY, value) WITHOUT ROWID;
 
-INSERT INTO usps_service
-("code", "name", "max_weight_oz", "max_value", "max_dim")
-VALUES
-("FCPIS", "First-Class Package Int'l", 64, 400.00, ""),
-("PMEI", "Priority Mail Express Int'l", NULL, NULL, ""),
-("PMI", "Priority Mail Int'l", NULL, NULL, ""),
-("FCMI", "First-Class Mail Int'l", NULL, NULL, ""),
-("AIR", "Int'l Package Airmail", NULL, NULL, "");
-
-
-INSERT INTO prefs VALUES
+INSERT INTO config VALUES
 -- SELECT DATETIME('now') returns the current UTC datetime
 ("last_ingest_usps_cpg", NULL),
 ("last_ingest_usps_fcpis_rates", NULL),
+("last_ingest_discogs_countries", NULL),
 -- https://faq.usps.com/s/article/Certificate-of-Mailing-The-Basics
 -- "Only available at a Post Office location"
 -- https://www.usps.com/international/insurance-extra-services.htm
@@ -27,5 +20,4 @@ INSERT INTO prefs VALUES
 ("usps_fcpis_registered_offer", 0),
 ("usps_fcpis_registered_req", 0),
 ("usps_fcpis_registered_fee", 24.00);
-
 
