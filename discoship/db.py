@@ -2,7 +2,7 @@ from contextlib import contextmanager
 import logging
 import sqlite3
 
-from discoship.defs import DB_PATH, SQL_INGEST_PATH, SQL_DISCOGS_PATH, SQL_CONFIG_PATH
+from discoship.defs import DB_PATH, SQL_INGEST_PATH, SQL_CONFIG_PATH
 
 
 log = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ def dbopen(readonly=False, row_factory=None, **connect_kwargs):
         db_path = f"file:{DB_PATH}?mode=rwc&cache=shared"
     log.debug(f"dbopen: db_path={db_path}")
     conn = sqlite3.connect(db_path, **connect_kwargs)
+    conn.execute("PRAGMA foreign_keys = ON;")
 
     # for SELECT statements, allow setting row_factory to sqlite3.Row
     # "Row provides indexed and case-insensitive named access to columns, with
@@ -96,7 +97,7 @@ def executemany(sql, params=None):
 
 def executescript(sql_stmts):
     """execute all statements in string sql_stmts"""
-    log.debug(f"executescript: {sql_stmts[:124]}...")
+    log.debug(f"executescript: {sql_stmts[:256]}...")
     with dbopen() as cur:
         cur.executescript(sql_stmts)
 
@@ -153,9 +154,8 @@ def dbinit():
 
     * * * WARNING: DESTROYS ALL DATA * * *
     drops all existing tables & recreates schema"""
-    executefile(SQL_INGEST_PATH)
-    executefile(SQL_DISCOGS_PATH)
     executefile(SQL_CONFIG_PATH)
+    executefile(SQL_INGEST_PATH)
 
 
 def recreate_ingest_tables():
@@ -165,7 +165,6 @@ def recreate_ingest_tables():
 
     Does not destroy user-modified data"""
     executefile(SQL_INGEST_PATH)
-    executefile(SQL_DISCOGS_PATH)
 
 
 def reset_config():
@@ -177,9 +176,23 @@ def reset_config():
     executefile(SQL_CONFIG_PATH)
 
 
+def set_config_val(name, value):
+    """update config value"""
+    params = (value.strip(), name.strip())
+    rowcount = execute("UPDATE config SET value = ? WHERE name = ?", params)
+    print(f"updated {rowcount} rows")
+
+
 def dump_config():
     """selects everything from config table for backup/display"""
     rows = select("SELECT * FROM config")
     config = { row[0]: row[1] for row in rows }
     return config
+
+
+def dump_countries():
+    """selects everything from destination_countries view"""
+    rows = select("SELECT * FROM desination_countries ORDER BY country_name")
+    countries = { row[0]: row[1] for row in rows }
+    return countries
 

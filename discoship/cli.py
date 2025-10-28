@@ -2,6 +2,7 @@ import argparse
 import importlib
 import logging
 from pprint import pprint
+import sys
 
 from discoship.db import dbinit, dump_config, reset_config, recreate_ingest_tables
 from discoship.defs import DEFAULT_PROVIDER, DEFAULT_SERVICE, VERSION
@@ -32,30 +33,42 @@ UspsArgParser = providers.add_parser('usps', help='US Postal Service')
 UspsArgParser.add_argument('--service', default=DEFAULT_SERVICE,
                            help=f'Shipping service (default {DEFAULT_SERVICE})')
 UspsArgParser.add_argument('--all', action='store_true',
-                           help='Ingest all data')
+                           help='Ingest all data for service')
 UspsArgParser.add_argument('--cpg', action='store_true',
-                           help='Country Price Group')
+                           help='Ingest USPS Country Price Group data')
 UspsArgParser.add_argument('--rates', action='store_true',
-                           help='Rates for Price Group by Weight')
+                           help='Ingest Rates for Price Group by Weight for service')
 
 # not as useful as expected; no shipping policy stuff is exposed via API
 DiscogsArgParser = providers.add_parser('discogs', help='ingest data from discogs API')
 DiscogsArgParser.add_argument('--destinations', action='store_true',
                               help='Ingest Discogs Destination Countries')
 
+CountriesArgParser = providers.add_parser('countries', help='ingest country data')
+CountriesArgParser.add_argument('--iso3166', action='store_true',
+                                help='Ingest ISO3166 Country Codes & official country names')
+
 InitArgParser = actions.add_parser('init', help='initialize resources')
 InitArgParser.add_argument('--db', action='store_true',
                            help='recreate entire db from scratch [WARNING: DESTROYS ALL DATA]')
 InitArgParser.add_argument('--reset-ingest-tables', action='store_true',
                            help='drop & recreate ingest tables; you will have to re-run ingest commands')
-InitArgParser.add_argument('--api', action='store_true',
-                           help='configure access to discogs.com API')
+#InitArgParser.add_argument('--api', action='store_true',
+#                           help='configure access to discogs.com API')
+
+PolicyArgParser = actions.add_parser('policy', help='create policy recommendation')
+PolicyArgParser.add_argument('--country', action='store_true',
+                             help='create policy for country (may specify name or country code)')
+PolicyArgParser.add_argument('--price-group', action='store_true',
+                             help='create policy for USPS price group')
+PolicyArgParser.add_argument('--all', action='store_true',
+                             help='create policy for all countries/price groups')
 
 ConfigArgParser = actions.add_parser('config', help='manage config')
 ConfigArgParser.add_argument('--dump', action='store_true',
                              help='display current config')
-ConfigArgParser.add_argument('--reset', action='store_true',
-                             help='reset config to defaults')
+#ConfigArgParser.add_argument('--reset', action='store_true',
+#                             help='reset config to defaults')
 
 
 def func_importer(func_path):
@@ -72,8 +85,8 @@ def delegate_args(args):
     log.debug(f'delegate_args: {args}')
     if args.action == 'config':
         if args.reset:
-            print("For reference, this was your config before reset:")
-            pprint(dump_config())
+            print("For reference, this was your config before reset:", file=sys.stderr)
+            pprint(dump_config(), stream=sys.stderr)
             reset_config()
         elif args.dump:
             pprint(dump_config())
@@ -83,10 +96,10 @@ def delegate_args(args):
         elif args.reset_ingest_tables:
             recreate_ingest_tables()
     elif args.action == 'ingest':
-        func_path = f'discoship.{args.provider.lower()}.fetch.fetch'
+        func_path = f'discoship.{args.provider}.fetch.fetch'
         func = func_importer(func_path)
-        if args.provider == 'discogs':
-            func()
-        elif args.provider == 'usps':
+        if args.provider == 'usps':
             func(fetchall=args.all, cpg=args.cpg, rates=args.rates, service=args.service)
+        else:
+            func()
 

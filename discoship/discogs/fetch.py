@@ -8,8 +8,8 @@ tools, and will use that HTML fragment as source.
 import bs4
 import logging
 import os
-import sqlite3
 
+from discoship.country_aliases import COUNTRY_ALIASES
 from discoship.db import execute, executemany, selectone
 from discoship.defs import PKG_PATH
 
@@ -64,6 +64,7 @@ def parse_destinations(source=SHIP_DESTS_PATH):
     for label in labels:
         country = label.text.replace('\n', ' ')
         if country not in IGNORE_REGION_NAMES:
+            country = COUNTRY_ALIASES.get(country, country)
             destinations.append(country)
     return sorted(destinations)
 

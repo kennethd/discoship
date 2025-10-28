@@ -2,6 +2,7 @@ import bs4
 import logging
 import re
 
+from discoship.country_aliases import COUNTRY_ALIASES
 from discoship.db import execute, executemany, selectone
 from discoship.defs import DEFAULT_SERVICE
 from discoship.io import fetch_url
@@ -96,6 +97,7 @@ def _parse_cpg_data_table(table_soup, service=DEFAULT_SERVICE):
         # [<td>Afghanistan</td>, <td>n/a</td>, <td>n/a</td>, <td>n/a</td>, <td>7</td>,
         #  <td>66</td>, <td>8</td>, <td>6</td>, <td>4</td>, <td>4</td>, <td>n/a</td>]
         country = tr.contents[0].text.strip()
+        country = COUNTRY_ALIASES.get(country, country)
         cpg = tr.contents[service_index].text.strip()
         parsed_cpg_data[country] = cpg
 
