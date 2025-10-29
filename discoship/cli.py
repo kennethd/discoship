@@ -4,7 +4,8 @@ import logging
 from pprint import pprint
 import sys
 
-from discoship.db import dbinit, dump_config, reset_config, recreate_ingest_tables
+from discoship.db import dbinit, dump_config, set_config, reset_config, \
+                         recreate_ingest_tables
 from discoship.defs import DEFAULT_PROVIDER, DEFAULT_SERVICE, VERSION
 from discoship.policy.ship_countries import list_countries, list_orphans
 
@@ -97,8 +98,15 @@ def delegate_args(args):
             print("For reference, this was your config before reset:", file=sys.stderr)
             pprint(dump_config(), stream=sys.stderr)
             reset_config()
+            print("\nNew config:", file=sys.stderr)
+            pprint(dump_config(), stream=sys.stderr)
+        if args.set:
+            rowcount = set_config(args.set[0], args.set[1])
+            print("\nNew config:", file=sys.stderr)
+            pprint(dump_config(), stream=sys.stderr)
         elif args.dump:
-            pprint(dump_config())
+            # always STDOUT when it is output asked for; STDERR when extra info
+            pprint(dump_config(), file=sys.stdout)
     elif args.action == 'init':
         if args.db:
             dbinit()

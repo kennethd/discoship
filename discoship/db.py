@@ -177,13 +177,6 @@ def reset_config():
     executefile(SQL_CONFIG_PATH)
 
 
-def set_config_val(name, value):
-    """update config value"""
-    params = (value.strip(), name.strip())
-    rowcount = execute("UPDATE config SET value = ? WHERE name = ?", params)
-    print(f"updated {rowcount} rows")
-
-
 def dump_config():
     """selects everything from config table for backup/display"""
     rows = select("SELECT * FROM config")
@@ -191,9 +184,10 @@ def dump_config():
     return config
 
 
-def dump_countries():
-    """selects everything from destination_countries view"""
-    rows = select("SELECT * FROM desination_countries ORDER BY country_name")
-    countries = { row[0]: row[1] for row in rows }
-    return countries
+def set_config(key, value):
+    """Update config table value"""
+    params = (value.strip(), key.strip())
+    rowcount = execute("UPDATE config SET value = ? WHERE name = ?", params)
+    log.info(f"set_config: updated {rowcount} rows")
+    return rowcount
 
