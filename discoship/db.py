@@ -40,6 +40,7 @@ def dbopen(readonly=False, row_factory=None, **connect_kwargs):
         cur = conn.cursor()
         yield cur
     except Exception as e:
+        log.error(f"db exception: {e}")
         conn.rollback()
         raise e
     else:

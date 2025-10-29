@@ -2,7 +2,7 @@ import bs4
 import logging
 import os
 
-from discoship.country_aliases import COUNTRY_ALIASES
+from discoship.countries.aliases import COUNTRY_ALIASES
 from discoship.db import execute, executemany, selectone
 from discoship.io import fetch_url
 

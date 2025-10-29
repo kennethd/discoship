@@ -4,15 +4,21 @@ tables are not intended to be modified manually.  Do not add table definitions
 to this file if dropping and recreating them will lose user-modified data.
 */
 
+DROP VIEW IF EXISTS ship_countries;
+DROP TABLE IF EXISTS usps_cpg;  -- FK refs usps_service; drop first
 DROP TABLE IF EXISTS usps_service;
+DROP TABLE IF EXISTS usps_fcpis_rates;
+DROP TABLE IF EXISTS iso3166_countries;
+DROP TABLE IF EXISTS discogs_destination_countries;
+
+
 CREATE TABLE usps_service(
-    code VARCHAR PRIMARY KEY,
+    code VARCHAR NOT NULL PRIMARY KEY,
     name VARCHAR,
     max_weight_oz INTEGER,
     max_value REAL
 );
 
-DROP TABLE IF EXISTS usps_cpg;
 CREATE TABLE usps_cpg(
     country_name VARCHAR NOT NULL,
     usps_service_code VARCHAR NOT NULL,
@@ -22,7 +28,6 @@ CREATE TABLE usps_cpg(
 );
 CREATE INDEX idx_usps_cpg_price_group ON usps_cpg(price_group);
 
-DROP TABLE IF EXISTS usps_fcpis_rates;
 CREATE TABLE usps_fcpis_rates(
     price_group INTEGER NOT NULL PRIMARY KEY,
     -- packing material alone is ~6oz
@@ -37,7 +42,6 @@ CREATE TABLE usps_fcpis_rates(
 );
 
 -- https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
-DROP TABLE IF EXISTS iso3166_countries;
 CREATE TABLE iso3166_countries(
     name VARCHAR NOT NULL PRIMARY KEY,
     official_name VARCHAR NOT NULL,
@@ -51,13 +55,11 @@ CREATE INDEX idx_iso3166_countries_code3 ON iso3166_countries(code3);
 
 -- the list of countries in the shipping policy editor
 -- https://www.discogs.com/settings/shipping
-DROP TABLE IF EXISTS discogs_destination_countries;
 CREATE TABLE discogs_destination_countries(
     country_name VARCHAR NOT NULL PRIMARY KEY
 );
 
 
-DROP VIEW IF EXISTS ship_countries;
 CREATE VIEW ship_countries AS
 SELECT
     iso.name AS country_name,
