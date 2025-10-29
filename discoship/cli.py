@@ -6,7 +6,7 @@ import sys
 
 from discoship.db import dbinit, dump_config, reset_config, recreate_ingest_tables
 from discoship.defs import DEFAULT_PROVIDER, DEFAULT_SERVICE, VERSION
-
+from discoship.policy.ship_countries import list_countries, list_orphans
 
 log = logging.getLogger(__name__)
 
@@ -17,11 +17,14 @@ DISCOSHIP_DESC = """
 DISCOSHIP_EPILOG = """
     For help with nested subcommands, do `discoship {subcommand} --help`
 """
+USPS_SERVICES = ('FCPIS', 'PCI', 'PCEI')
 
 DiscoShipArgParser = argparse.ArgumentParser(description=DISCOSHIP_DESC,
                                              epilog=DISCOSHIP_EPILOG)
-DiscoShipArgParser.add_argument('-d', '--debug', action='store_true',
+DiscoShipArgParser.add_argument('-i', '--info', action='store_true',
                                 help='increases loglevel output')
+DiscoShipArgParser.add_argument('-d', '--debug', action='store_true',
+                                help='increases loglevel output to maximum')
 DiscoShipArgParser.add_argument('--version', action='version', version=VERSION,
                                 help='show version and exit')
 actions = DiscoShipArgParser.add_subparsers(dest='action', help='subcommands')
@@ -57,18 +60,24 @@ InitArgParser.add_argument('--reset-ingest-tables', action='store_true',
 #                           help='configure access to discogs.com API')
 
 PolicyArgParser = actions.add_parser('policy', help='create policy recommendation')
-PolicyArgParser.add_argument('--country', action='store_true',
+PolicyArgParser.add_argument('--country',
                              help='create policy for country (may specify name or country code)')
 PolicyArgParser.add_argument('--price-group', action='store_true',
                              help='create policy for USPS price group')
 PolicyArgParser.add_argument('--all', action='store_true',
                              help='create policy for all countries/price groups')
+PolicyArgParser.add_argument('--list-countries', action='store_true',
+                             help='list recognized countries & 2-letter codes')
+PolicyArgParser.add_argument('--list-orphans', action='store_true',
+                             help='list country names from ISO & discogs tables with no match for join')
 
 ConfigArgParser = actions.add_parser('config', help='manage config')
 ConfigArgParser.add_argument('--dump', action='store_true',
                              help='display current config')
-#ConfigArgParser.add_argument('--reset', action='store_true',
-#                             help='reset config to defaults')
+ConfigArgParser.add_argument('--reset', action='store_true',
+                             help='reset config to defaults')
+ConfigArgParser.add_argument('--set', nargs=2,
+                             help='requires 2 args: config key & value')
 
 
 def func_importer(func_path):
@@ -95,6 +104,11 @@ def delegate_args(args):
             dbinit()
         elif args.reset_ingest_tables:
             recreate_ingest_tables()
+    elif args.action == 'policy':
+        if args.list_countries:
+            list_countries()
+        elif args.list_orphans:
+            list_orphans()
     elif args.action == 'ingest':
         func_path = f'discoship.{args.provider}.fetch.fetch'
         func = func_importer(func_path)

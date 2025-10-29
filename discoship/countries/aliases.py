@@ -11,48 +11,35 @@ $ sqlite3 discoship/data/discoship.db "select COUNT(*) from usps_cpg;"
 $ sqlite3 discoship/data/discoship.db "select COUNT(*) from discogs_destination_countries
     AS discogs INNER JOIN usps_cpg ON discogs.country_name = usps_cpg.country_name;"
 180
+
+simplest option: map aliases to canonical spellings at insert time:
 """
 
-# countries that exist in discogs_destination_countries but not usps_cpg:
-#
-# SELECT d.country_name FROM discogs_destination_countries AS d
-# LEFT JOIN usps_cpg AS u
-#        ON d.country_name = u.country_name
-# WHERE u.country_name IS NULL;
-#
-# Countries that exist in usps_cpg but not discogs_destination_countries:
-#
-# sqlite3 discoship/data/discoship.db ".headers on" ".mode column" "
-# SELECT u.country_name FROM discogs_destination_countries AS d
-# RIGHT JOIN usps_cpg AS u
-#         ON d.country_name = u.country_name
-# WHERE d.country_name IS NULL;
-"""
-DROP TABLE IF EXISTS country_aliases;
-CREATE TABLE country_aliases (
-    iso3166_name VARCHAR,
-    usps_cpg_name VARCHAR,
-    discogs_name VARCHAR
-);
-CREATE INDEX idx_country_aliases_iso3166_name ON country_aliases(iso3166_name);
-CREATE INDEX idx_country_aliases_usps_cpg_name ON country_aliases(usps_cpg_name);
-CREATE INDEX idx_country_aliases_discogs_name ON country_aliases(discogs_name);
-*/
-"""
-
-# simplest option: map aliases to cononical spellings at insert time:
 COUNTRY_ALIASES = {
+    "Azerbaidjan": "Azerbaijan",
     "Bolivia (Plurinational State of)": "Bolivia",
+    "Bosnia-Herzegovina": "Bosnia and Herzegovina",
+    "Cabo Verde": "Cape Verde",
     "Cote d'Ivoire": "Côte d'Ivoire",
     "Ivory Coast": "Côte d'Ivoire",
     "Ivory Coast (Cote D'Ivoire)": "Côte d'Ivoire",
+    "Curacao": "Curaçao",
+    "Czechia": "Czech Republic",
+    "Congo (the Democratic Republic of the)": "Democratic Republic of the Congo",
+    "Congo, Democratic Republic of the": "Democratic Republic of the Congo",
+    "Zaire": "Democratic Republic of the Congo",
     "Georgia, Republic of": "Georgia",
+    "Guadeloupe (French)": "Guadeloupe",
     "Guinea Bissau": "Guinea-Bissau",
+    "Falkland Islands [Malvinas]": "Falkland Islands",
     "French Guiana": "Guyana",
     "Iran (Islamic Republic of)": "Iran",
     "Kosovo, Republic of": "Kosovo",
     "Lao People's Democratic Republic": "Laos",
+    "Martinique (French)": "Martinique",
     "Macao": "Macau",
+    "Moldavia": "Moldova",
+    "New Caledonia (French)": "New Caledonia",
     "North Macedonia, Republic of": "Macedonia",
     "Micronesia (Federated States of)": "Micronesia",
     "Moldova (the Republic of)": "Moldova",
@@ -60,11 +47,16 @@ COUNTRY_ALIASES = {
     "Netherlands (Kingdom of the)": "Netherlands",
     "Korea, Democratic Peoples Republic of (North Korea)": "North Korea",
     "Korea (the Democratic People's Republic of)": "North Korea",
+    "Pitcairn": "Pitcairn Island",
+    "Congo, Republic of the": "Republic of the Congo",
+    "Congo": "Republic of the Congo",
     "Reunion": "Réunion",
+    "Reunion (French)": "Réunion",
     "Russian Federation": "Russia",
     "Saint (St.) Kitts and Nevis": "Saint Kitts and Nevis",
     "Saint Kitts & Nevis Anguilla": "Saint Kitts and Nevis",
     "Saint Tome (Sao Tome) and Princi": "São Tomé and Príncipe",
+    "Saint Vincent and the Grenadines": "Saint Vincent & Grenadines",
     "Sao Tome and Principe": "São Tomé and Príncipe",
     "Serbia, Republic of": "Serbia",
     "Sint Maarten (Dutch)": "Sint Maarten",
@@ -73,6 +65,8 @@ COUNTRY_ALIASES = {
     "South Sudan, Republic of": "South Sudan",
     "Korea, Republic of (South Korea)": "South Korea",
     "Korea (the Republic of)": "South Korea",
+    "Svalbard Jan Mayen": "Svalbard and Jan Mayen Islands",
+    "Syrian Arab Republic": "Syria",
     "Syrian Arab Republic (Syria)": "Syria",
     "Taiwan (Province of China)": "Taiwan",
     "Tadjikistan": "Tajikistan",
@@ -82,9 +76,12 @@ COUNTRY_ALIASES = {
     "Turkiye, Republic of": "Turkey",
     "Türkiye": "Turkey",
     "United Kingdom of Great Britain and Northern Ireland": "United Kingdom",
+    "United States of America": "United States",
     "Holy See": "Vatican City",
     "Vatican City State": "Vatican City",
     "Venezuela (Bolivarian Republic of)": "Venezuela",
     "Viet Nam": "Vietnam",
+    "Virgin Islands (USA)": "Virgin Islands (U.S.)",
+    "Wallis and Futuna Islands": "Wallis and Futuna",
 }
 

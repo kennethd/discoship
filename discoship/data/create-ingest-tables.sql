@@ -75,13 +75,16 @@ SELECT
     fcpis.weight_to_48oz AS fcpis_to_48oz,
     fcpis.weight_to_64oz AS fcpis_to_64oz
 FROM iso3166_countries AS iso
-LEFT JOIN usps_cpg AS cpg
-       ON iso.name = cpg.country_name
-LEFT JOIN usps_service AS svc
-       ON cpg.usps_service_code = svc.code
-LEFT JOIN usps_fcpis_rates AS fcpis
-       ON cpg.price_group = fcpis.price_group
-      AND cpg.usps_service_code = 'FCPIS'
+-- ignore countries without matching row in discogs
+INNER JOIN discogs_destination_countries AS discogs
+        ON iso.name = discogs.country_name
+ LEFT JOIN usps_cpg AS cpg
+        ON iso.name = cpg.country_name
+ LEFT JOIN usps_service AS svc
+        ON cpg.usps_service_code = svc.code
+ LEFT JOIN usps_fcpis_rates AS fcpis
+        ON cpg.price_group = fcpis.price_group
+       AND cpg.usps_service_code = 'FCPIS'
 ;
 
 -- initial inserts

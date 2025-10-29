@@ -5,9 +5,11 @@ import sys
 from discoship.cli import DiscoShipArgParser, delegate_args
 
 args = DiscoShipArgParser.parse_args()
-print(args, file=sys.stderr)
+#print(args, file=sys.stderr)
 if args.debug:
     logging.basicConfig(level=logging.DEBUG)
-else:
+elif args.info:
     logging.basicConfig(level=logging.INFO)
+else:
+    logging.basicConfig(level=logging.WARN)
 delegate_args(args)
