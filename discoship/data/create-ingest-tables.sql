@@ -21,10 +21,13 @@ CREATE TABLE usps_service(
     max_value REAL
 );
 
+-- https://pe.usps.com/text/dmm300/Notice123.htm#_c419
 CREATE TABLE usps_cpg(
     country_name VARCHAR NOT NULL,
     usps_service_code VARCHAR NOT NULL,
     price_group INTEGER NOT NULL,
+    max_weight_lbs INTEGER NULL,  -- N/A for FCPIS
+    flat_rate_price_group INTEGER NULL,  -- N/A for FCPIS
     FOREIGN KEY (usps_service_code) REFERENCES usps_service(code),
     PRIMARY KEY (country_name, usps_service_code)
 );
@@ -100,9 +103,8 @@ SELECT
     iso.code2 AS cc2,
     iso.code3 AS cc3,
     svc.code AS usps_svc_code,
-    -- svc.name AS usps_svc_name,
-    svc.max_weight_oz,
-    svc.max_value,
+    -- PMI price code is not nec == PMEI price code
+    -- FCPIS price code is very often not == PMI/PMEI price code
     cpg.price_group AS usps_price_group,
     fcpis.weight_to_8oz AS fcpis_to_8oz,
     fcpis.weight_to_32oz AS fcpis_to_32oz,
@@ -118,16 +120,16 @@ SELECT
     pmi.weight_to_128oz AS pmi_to_128oz,
     pmi.weight_to_144oz AS pmi_to_144oz,
     pmi.weight_to_160oz AS pmi_to_160oz,
-    pmei.weight_to_16oz AS pmei_to_16oz,
-    pmei.weight_to_32oz AS pmei_to_32oz,
-    pmei.weight_to_48oz AS pmei_to_48oz,
-    pmei.weight_to_64oz AS pmei_to_64oz,
-    pmei.weight_to_80oz AS pmei_to_80oz,
-    pmei.weight_to_96oz AS pmei_to_96oz,
-    pmei.weight_to_112oz AS pmei_to_112oz,
-    pmei.weight_to_128oz AS pmei_to_128oz,
-    pmei.weight_to_144oz AS pmei_to_144oz,
-    pmei.weight_to_160oz AS pmei_to_160oz
+    -- FCPIS has hard limits for weight & value
+    -- PMI/PMEI values in svc table more arbitrarily set
+    svc.max_weight_oz AS svc_max_weight_oz,
+    svc.max_value AS svc_max_value,
+    -- max_weight_lbs & flat rate prices only relevant to PMI/PMEI
+    -- max_weight_lbs accepted for svc varies by destination (usually 22, 44, 66 LBS)
+    -- svc_max_rate_oz intended to be more operationally relevant; max_weight_lbs strictly infomational
+    cpg.max_weight_lbs,
+    cpg.flat_rate_price_group,
+    svc.name AS usps_svc_name
 FROM iso3166_countries AS iso
 -- ignore countries without matching row in discogs
 INNER JOIN discogs_destination_countries AS discogs
@@ -142,9 +144,9 @@ INNER JOIN discogs_destination_countries AS discogs
  LEFT JOIN usps_pmi_rates AS pmi
         ON cpg.price_group = pmi.price_group
        AND cpg.usps_service_code = 'PMI'
- LEFT JOIN usps_pmei_rates AS pmei
-        ON cpg.price_group = pmei.price_group
-       AND cpg.usps_service_code = 'PMEI'
+-- LEFT JOIN usps_pmei_rates AS pmei
+--        ON cpg.price_group = pmei.price_group
+--       AND cpg.usps_service_code = 'PMEI'
 ;
 
 -- initial inserts

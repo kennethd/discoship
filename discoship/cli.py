@@ -109,7 +109,7 @@ def delegate_args(args):
             pprint(dump_config(), stream=sys.stderr)
         elif args.dump:
             # always STDOUT when it is output asked for; STDERR when extra info
-            pprint(dump_config(), file=sys.stdout)
+            pprint(dump_config(), stream=sys.stdout)
     elif args.action == 'init':
         if args.db:
             dbinit()

@@ -4,7 +4,8 @@ import re
 
 from discoship.countries.aliases import COUNTRY_ALIASES
 from discoship.db import execute, executemany, selectone
-from discoship.defs import DEFAULT_SERVICE, USPS_RATE_TABLES_URL
+from discoship.defs import DEFAULT_SERVICE, USPS_RATE_TABLES_URL, \
+    USPS_SVC_FCPIS, USPS_SVC_PMEI, USPS_SVC_PMI
 from discoship.io import fetch_url
 
 
@@ -13,13 +14,35 @@ log = logging.getLogger(__name__)
 
 CPG_HEADER_TEXT = "Country Price Groups"
 
+# To match these <th> values, all <sup> tags will be removed, <br>s replaced
+# with spaces & remaining text matched against SVC_HEADER_TEXT value:
+# <th colspan="3">Priority Mail Express<br/>International</th>
+# <th colspan="3">Priority Mail<br/>International</th>
+# <th>First-Class<br/>Mail Int'l<sup>3</sup></th>
+# <th>FCPIS<sup>3</sup></th>
+SVC_HEADER_TEXT ={
+    USPS_SVC_FCPIS: "FCPIS",
+    USPS_SVC_PMEI: "Priority Mail Express International",
+    USPS_SVC_PMI: "Priority Mail International",
+}
+
 # usps_cpg primary key is (country_name, usps_service_code); to allow
 # updates without rebuilding db from scratch, do UPSERT on conflict
 INSERT_USPS_CPG = """
-  INSERT INTO usps_cpg (country_name, usps_service_code, price_group)
-  VALUES (?, ?, ?)
+  INSERT INTO usps_cpg (
+    country_name,
+    usps_service_code,
+    price_group,
+    max_weight_lbs,
+    flat_rate_price_group
+  )
+  VALUES (?, ?, ?, ?, ?)
   ON CONFLICT (country_name, usps_service_code)
-  DO UPDATE SET price_group = excluded.price_group;
+  DO UPDATE SET
+    price_group = excluded.price_group,
+    max_weight_lbs = excluded.max_weight_lbs,
+    flat_rate_price_group = excluded.flat_rate_price_group
+;
 """
 
 UPDATE_LAST_INGEST_DATE = """
@@ -64,6 +87,11 @@ def _parse_cpg_data_table(table_soup, service=DEFAULT_SERVICE):
     returns dict {country: price_group}"""
     assert isinstance(table_soup, bs4.element.Tag)
     assert table_soup.name == 'table'
+    # remove all <sup> tags used for footnotes in source table
+    for sup in table_soup.find_all('sup'):
+        sup.decompose()
+    for br in table_soup.find_all('br'):
+        br.replace_with(' ')
     #print(table_soup.contents)
     # [' ', <thead> <tr><th rowspan="2">Country</th>...</thead>, ' ', <tbody> ...]
     thead = table_soup.contents[1]
@@ -72,24 +100,27 @@ def _parse_cpg_data_table(table_soup, service=DEFAULT_SERVICE):
     assert tbody.name == 'tbody'
 
     parsed_cpg_data = {}
-    service_index = 0
     log.debug(f'looking for service_index for {service}')
     trs = thead.find_all('tr')
+    # +---------+--------------+--------------+------+-------+-----+------+
+    # | Country |     PMEI     |      PMI     | FCMI | FCPIS | IPA | ISAL |
+    # +         +----+----+----+----+---------+------+-------+-----+------+
+    # |         | PG | MW | FR | PG | MW | FR |  PG  |  PG   | PG  |  PG  |
+    # +---------+----+----+----+----+---------+------+-------+-----+------+
+    # PG = Price Group; MW = Max Weight (lbs); FR = Flat Rate Price Group
+    service_index = 0
+    max_weight_index = 0
+    flat_rate_index = 0
     for th in trs[0].find_all('th'):
-        # <th rowspan="2">Country</th>
-        # <th colspan="3">Priority Mail Express<br/>International</th>
-        # <th colspan="3">Priority Mail<br/>International</th>
-        # <th>First-Class<br/>Mail Int'l<sup>3</sup></th>
-        # <th>FCPIS<sup>3</sup></th>             *note th.text == FCPIS3
-        # <th>IPA<sup>4</sup></th>
-        # <th>ISAL<sup>4</sup></th>
-        if service.lower() in th.text.lower():
-            # TODO: if enabling PMEI/PMI prev line needs change to re.match() with \b
-            log.debug(f'{service} found in {th.text}')
+        if SVC_HEADER_TEXT[service.upper()] in th.text.strip():
+            log.debug(f'{service} found @ index {service_index} in {th.text}')
             break
         colspan = th.attrs.get('colspan', 1)
         service_index += int(colspan)
-    log.debug(f'{service} service_index is {service_index}')
+        if service.upper() in (USPS_SVC_PMI, USPS_SVC_PMEI):
+            max_weight_index = service_index + 1
+            flat_rate_index = service_index + 2
+    log.debug(f'{service} indices service:{service_index} max weight:{max_weight_index} flat rate:{flat_rate_index}')
 
     for tr in tbody.find_all('tr'):
         #print(tr.contents)
@@ -98,9 +129,15 @@ def _parse_cpg_data_table(table_soup, service=DEFAULT_SERVICE):
         country = tr.contents[0].text.strip()
         country = COUNTRY_ALIASES.get(country, country)
         cpg = tr.contents[service_index].text.strip()
-        parsed_cpg_data[country] = cpg
+        if service.upper() in (USPS_SVC_PMI, USPS_SVC_PMEI):
+            mwlbs = tr.contents[max_weight_index].text.strip()
+            frpg = tr.contents[flat_rate_index].text.strip()
+        else:
+            mwlbs = None
+            frpg = None
+        parsed_cpg_data[country] = (cpg, mwlbs, frpg)
 
-    log.debug(f'Parsed {len(parsed_cpg_data)} Country Rate Groups')
+    log.debug(f'Parsed {len(parsed_cpg_data)} Country Price Group data for {service}')
     return parsed_cpg_data
 
 
@@ -147,8 +184,11 @@ def ingest_cpg_data(cpg_data, service=DEFAULT_SERVICE):
     ```"""
     log.debug(f'ingest_cpg_data: service={service} {cpg_data}')
     # incoming cpg_data is formatted as:
-    # {'Afghanistan': '4', 'Albania': '3', 'Algeria': '5', ...}
-    vals = [ (k, service, v) for k, v in cpg_data.items() ]
+    # {'Afghanistan': ('4', None, None), 'Albania': ('3', None, None), ...}
+    # tuples containing: (price_group for service, max_weight_lbs, flat_rate_price_group)
+    # max_weight_lbs & flat_rate_price_group are N/A for FCPIS, PMI data looks like:
+    # {'Afghanistan': ('7', '66', '8'), 'Albania': ('3', '44', '8'), ...}
+    vals = [ tuple([country, service] + list(v)) for country, v in cpg_data.items() ]
     #print(vals)
     rowcount = executemany(INSERT_USPS_CPG, vals)
     log.info(f'ingest_cpg_data: updated {rowcount} rows')
