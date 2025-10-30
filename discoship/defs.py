@@ -9,12 +9,14 @@ import os
 # FCPIS                                   * * * our default * * *
 # IPA                                     air mail
 # ISAL                                    air lift
-USPS_SVC_PMEI = "Priority Mail Express"
-USPS_SVC_PMI = "Priority Mail"
-USPS_SVC_FCMI = "First-Class"
 USPS_SVC_FCPIS = "FCPIS"
+USPS_SVC_PMEI = "PMEI"
+USPS_SVC_PMI = "PMI"
 USPS_SVC_AIR = "IPA"
 USPS_SVC_AIRLIFT = "ISAL"
+USPS_SERVICES = (USPS_SVC_FCPIS, USPS_SVC_PMI)
+
+USPS_RATE_TABLES_URL = "https://pe.usps.com/text/dmm300/Notice123.htm"
 
 DEFAULT_PROVIDER = "USPS"
 DEFAULT_SERVICE = USPS_SVC_FCPIS

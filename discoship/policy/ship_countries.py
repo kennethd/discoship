@@ -73,15 +73,17 @@ def list_countries(service=None, fh=sys.stdout):
     """
     countries = select_countries(service)
     log.info(f"list_countries: service={service} found {len(countries)} countries")
-    max_name_len = max([ len(c['country_name']) for c in countries ])
+    if not countries:
+        log.warn('list_countries: no countries found')
+        return
     head = ('Country Name', '2-Code', '3-Code', 'Price Group', 'Service Code')
     tmpl = "{1:<{0}s}  {2:<6s}  {3:<6s}  {4:<11s}  {5:<12s}"
-    if countries:
-        print(tmpl.format(max_name_len, *head), file=fh)
-        print('-' * max_name_len, '-' * 6, '-' * 6, '-' * 11, '-' * 12, sep='  ', file=fh)
-        for country in countries:
-            vals = [max_name_len] + [ str(v) for v in country.values() ]
-            print(tmpl.format(*vals), file=fh)
+    max_name_len = max([ len(c['country_name']) for c in countries ])
+    print(tmpl.format(max_name_len, *head), file=fh)
+    print('-' * max_name_len, '-' * 6, '-' * 6, '-' * 11, '-' * 12, sep='  ', file=fh)
+    for country in countries:
+        vals = [max_name_len] + [ str(v) for v in country.values() ]
+        print(tmpl.format(*vals), file=fh)
 
 
 def list_orphans(fh=sys.stdout):

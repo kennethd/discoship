@@ -45,6 +45,8 @@ COUNTRY_ALIASES = {
     "Moldova (the Republic of)": "Moldova",
     "Burma": "Myanmar",
     "Netherlands (Kingdom of the)": "Netherlands",
+    "Niue (New Zealand)": "Niue",
+    "Norfolk Island (Australia)": "Norfolk Island",
     "Korea, Democratic Peoples Republic of (North Korea)": "North Korea",
     "Korea (the Democratic People's Republic of)": "North Korea",
     "Pitcairn": "Pitcairn Island",

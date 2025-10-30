@@ -6,7 +6,7 @@ import sys
 
 from discoship.db import dbinit, dump_config, set_config, reset_config, \
                          recreate_ingest_tables
-from discoship.defs import DEFAULT_PROVIDER, DEFAULT_SERVICE, VERSION
+from discoship.defs import DEFAULT_PROVIDER, DEFAULT_SERVICE, USPS_SERVICES, VERSION
 from discoship.policy.ship_countries import list_countries, list_orphans
 
 log = logging.getLogger(__name__)
@@ -18,7 +18,6 @@ DISCOSHIP_DESC = """
 DISCOSHIP_EPILOG = """
     For help with nested subcommands, do `discoship {subcommand} --help`
 """
-USPS_SERVICES = ('FCPIS', 'PCI', 'PCEI')
 
 DiscoShipArgParser = argparse.ArgumentParser(description=DISCOSHIP_DESC,
                                              epilog=DISCOSHIP_EPILOG)
@@ -33,8 +32,12 @@ actions = DiscoShipArgParser.add_subparsers(dest='action', help='subcommands')
 IngestArgParser = actions.add_parser('ingest', help='ingest external data sources')
 providers = IngestArgParser.add_subparsers(dest='provider', help='data source')
 
+# users will almost always want to do:
+# $ discoship ingest usps --all
+# for devs, it is convenient to be able to ingest only data you are working on:
+# $ discoship -d ingest usps --rates --pmi
 UspsArgParser = providers.add_parser('usps', help='US Postal Service')
-UspsArgParser.add_argument('--service', default=DEFAULT_SERVICE,
+UspsArgParser.add_argument('--service', choices=USPS_SERVICES, default=DEFAULT_SERVICE,
                            help=f'Shipping service (default {DEFAULT_SERVICE})')
 UspsArgParser.add_argument('--all', action='store_true',
                            help='Ingest all data for service')

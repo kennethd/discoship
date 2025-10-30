@@ -4,18 +4,15 @@ import logging
 import re
 
 from discoship.db import execute, executemany, selectone
-from discoship.defs import USPS_SVC_FCPIS
+from discoship.defs import USPS_RATE_TABLES_URL
 from discoship.io import fetch_url
 
 
 log = logging.getLogger(__name__)
 
 
-RATE_TABLE_URL = "https://pe.usps.com/text/dmm300/Notice123.htm"
 FCPIS_RATE_TABLE_HEADER_TEXT = "First-Class Package International Service Price Groups"
 
-# usps_fcpis_rates has UNIQUE const on (price_group); to allow
-# updates without rebuilding db from scratch, do UPSERT on conflict
 INSERT_USPS_FCPIS_RATES = """
   INSERT INTO usps_fcpis_rates (
     price_group,
@@ -99,7 +96,7 @@ def _parse_fcpis_rate_table(table_soup):
 #     <tr>
 #       <td>1–8</td>
 #       ...10 <td>s w/price including "$"sign (following rows have no "$")
-def fetch_fcpis_rates_data(url=RATE_TABLE_URL):
+def fetch_fcpis_rates_data(url=USPS_RATE_TABLES_URL):
     """parses price by weight per price_group table
 
     USPS maintains 20 Price Groups for international shipping, each country

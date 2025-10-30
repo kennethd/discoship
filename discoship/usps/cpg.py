@@ -4,14 +4,13 @@ import re
 
 from discoship.countries.aliases import COUNTRY_ALIASES
 from discoship.db import execute, executemany, selectone
-from discoship.defs import DEFAULT_SERVICE
+from discoship.defs import DEFAULT_SERVICE, USPS_RATE_TABLES_URL
 from discoship.io import fetch_url
 
 
 log = logging.getLogger(__name__)
 
 
-CPG_DATA_URL = "https://pe.usps.com/text/dmm300/Notice123.htm"
 CPG_HEADER_TEXT = "Country Price Groups"
 
 # usps_cpg primary key is (country_name, usps_service_code); to allow
@@ -105,7 +104,7 @@ def _parse_cpg_data_table(table_soup, service=DEFAULT_SERVICE):
     return parsed_cpg_data
 
 
-def fetch_cpg_data(url=CPG_DATA_URL, service=DEFAULT_SERVICE):
+def fetch_cpg_data(url=USPS_RATE_TABLES_URL, service=DEFAULT_SERVICE):
     """parses Country Price Group data from pe.usps.com
 
     returns dict {country: price_group}"""

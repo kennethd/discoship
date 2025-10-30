@@ -8,6 +8,8 @@ DROP VIEW IF EXISTS ship_countries;
 DROP TABLE IF EXISTS usps_cpg;  -- FK refs usps_service; drop first
 DROP TABLE IF EXISTS usps_service;
 DROP TABLE IF EXISTS usps_fcpis_rates;
+DROP TABLE IF EXISTS usps_pmi_rates;
+DROP TABLE IF EXISTS usps_pmei_rates;
 DROP TABLE IF EXISTS iso3166_countries;
 DROP TABLE IF EXISTS discogs_destination_countries;
 
@@ -34,11 +36,43 @@ CREATE TABLE usps_fcpis_rates(
     weight_to_8oz INTEGER NOT NULL,  -- ship cost up to 8oz
     -- one LP boxed up is ~18-20oz
     -- one 2xLP is ~22-24oz
-    -- 2 LPs ~28-32oz
-    weight_to_32oz INTEGER NOT NULL,  -- up to 32oz
-    -- 3 LPs ~36oz
-    weight_to_48oz INTEGER NOT NULL,  -- up to 48oz
-    weight_to_64oz INTEGER NOT NULL  -- up to 64oz
+    weight_to_32oz INTEGER NOT NULL,  -- 2 LPs ~28-32oz
+    weight_to_48oz INTEGER NOT NULL,  -- 3 LPs ~36oz
+    weight_to_64oz INTEGER NOT NULL   -- up to 64oz
+);
+
+CREATE TABLE usps_pmi_rates(
+    price_group INTEGER NOT NULL PRIMARY KEY,
+    -- packing material alone is ~6oz
+    -- PMI & PMEI rates increase by the pound, to 66lbs total
+    -- I think standard mailing boxes hold at most ~6lps
+    weight_to_16oz INTEGER NOT NULL,
+    weight_to_32oz INTEGER NOT NULL,
+    weight_to_48oz INTEGER NOT NULL,
+    weight_to_64oz INTEGER NOT NULL,
+    weight_to_80oz INTEGER NOT NULL,
+    weight_to_96oz INTEGER NOT NULL,
+    weight_to_112oz INTEGER NOT NULL,
+    weight_to_128oz INTEGER NOT NULL,
+    weight_to_144oz INTEGER NOT NULL,
+    weight_to_160oz INTEGER NOT NULL
+);
+
+CREATE TABLE usps_pmei_rates(
+    price_group INTEGER NOT NULL PRIMARY KEY,
+    -- packing material alone is ~6oz
+    -- PMI & PMEI rates increase by the pound, to 66lbs total
+    -- I think standard mailing boxes hold at most ~6lps
+    weight_to_16oz INTEGER NOT NULL,
+    weight_to_32oz INTEGER NOT NULL,
+    weight_to_48oz INTEGER NOT NULL,
+    weight_to_64oz INTEGER NOT NULL,
+    weight_to_80oz INTEGER NOT NULL,
+    weight_to_96oz INTEGER NOT NULL,
+    weight_to_112oz INTEGER NOT NULL,
+    weight_to_128oz INTEGER NOT NULL,
+    weight_to_144oz INTEGER NOT NULL,
+    weight_to_160oz INTEGER NOT NULL
 );
 
 -- https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
@@ -73,7 +107,27 @@ SELECT
     fcpis.weight_to_8oz AS fcpis_to_8oz,
     fcpis.weight_to_32oz AS fcpis_to_32oz,
     fcpis.weight_to_48oz AS fcpis_to_48oz,
-    fcpis.weight_to_64oz AS fcpis_to_64oz
+    fcpis.weight_to_64oz AS fcpis_to_64oz,
+    pmi.weight_to_16oz AS pmi_to_16oz,
+    pmi.weight_to_32oz AS pmi_to_32oz,
+    pmi.weight_to_48oz AS pmi_to_48oz,
+    pmi.weight_to_64oz AS pmi_to_64oz,
+    pmi.weight_to_80oz AS pmi_to_80oz,
+    pmi.weight_to_96oz AS pmi_to_96oz,
+    pmi.weight_to_112oz AS pmi_to_112oz,
+    pmi.weight_to_128oz AS pmi_to_128oz,
+    pmi.weight_to_144oz AS pmi_to_144oz,
+    pmi.weight_to_160oz AS pmi_to_160oz,
+    pmei.weight_to_16oz AS pmei_to_16oz,
+    pmei.weight_to_32oz AS pmei_to_32oz,
+    pmei.weight_to_48oz AS pmei_to_48oz,
+    pmei.weight_to_64oz AS pmei_to_64oz,
+    pmei.weight_to_80oz AS pmei_to_80oz,
+    pmei.weight_to_96oz AS pmei_to_96oz,
+    pmei.weight_to_112oz AS pmei_to_112oz,
+    pmei.weight_to_128oz AS pmei_to_128oz,
+    pmei.weight_to_144oz AS pmei_to_144oz,
+    pmei.weight_to_160oz AS pmei_to_160oz
 FROM iso3166_countries AS iso
 -- ignore countries without matching row in discogs
 INNER JOIN discogs_destination_countries AS discogs
@@ -85,6 +139,12 @@ INNER JOIN discogs_destination_countries AS discogs
  LEFT JOIN usps_fcpis_rates AS fcpis
         ON cpg.price_group = fcpis.price_group
        AND cpg.usps_service_code = 'FCPIS'
+ LEFT JOIN usps_pmi_rates AS pmi
+        ON cpg.price_group = pmi.price_group
+       AND cpg.usps_service_code = 'PMI'
+ LEFT JOIN usps_pmei_rates AS pmei
+        ON cpg.price_group = pmei.price_group
+       AND cpg.usps_service_code = 'PMEI'
 ;
 
 -- initial inserts
@@ -94,9 +154,11 @@ INSERT INTO usps_service
 VALUES
 ("FCPIS", "First-Class Package Int'l", 64, 400.00),
 -- PMI comes in 2 flavors: flat-rate or by-weight
-("PMI", "Priority Mail Int'l", 1056, NULL),  -- up tp 66lbs
--- 2 price groups allow up to 70lbs but calling it at 66
 -- https://pe.usps.com/text/dmm300/Notice123.htm#_c334
-("PMEI", "Priority Mail Express Int'l", NULL, NULL)
+-- flat-rate is for those special USPS boxes, none are correct dimensions for vinyl
+-- by-weight allows up to 66lbs (1056oz) (70lbs for 2 price codes)
+-- my postal scale only goes to 10lbs
+("PMI", "Priority Mail Int'l", 160, 1025.00),  -- up tp 10lbs
+("PMEI", "Priority Mail Express Int'l", 160, 5000.00)
 ;
 
