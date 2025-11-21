@@ -4,10 +4,14 @@ import logging
 from pprint import pprint
 import sys
 
+from discoship.countries.fetch import fetch as fetch_countries_data
 from discoship.db import dbinit, dump_config, set_config, reset_config, \
                          recreate_ingest_tables
 from discoship.defs import DEFAULT_PROVIDER, DEFAULT_SERVICE, USPS_SERVICES, VERSION
+from discoship.discogs.fetch import fetch as fetch_discogs_data
+from discoship.policy.policy import create_policy
 from discoship.policy.ship_countries import list_countries, list_orphans
+from discoship.usps.fetch import fetch as fetch_usps_data
 
 log = logging.getLogger(__name__)
 
@@ -58,16 +62,19 @@ CountriesArgParser.add_argument('--iso3166', action='store_true',
 InitArgParser = actions.add_parser('init', help='initialize resources')
 InitArgParser.add_argument('--db', action='store_true',
                            help='recreate entire db from scratch [WARNING: DESTROYS ALL DATA]')
+# --reset-ingest-tables useful for schema changes during dev without losing config
 InitArgParser.add_argument('--reset-ingest-tables', action='store_true',
                            help='drop & recreate ingest tables; you will have to re-run ingest commands')
-#InitArgParser.add_argument('--api', action='store_true',
-#                           help='configure access to discogs.com API')
+#InitArgParser.add_argument('--api', action='store_true', help='configure access to discogs.com API')
 
 PolicyArgParser = actions.add_parser('policy', help='create policy recommendation')
 PolicyArgParser.add_argument('--country',
                              help='create policy for country (may specify name or country code)')
-PolicyArgParser.add_argument('--price-group', action='store_true',
-                             help='create policy for USPS price group')
+PolicyArgParser.add_argument('--service', choices=USPS_SERVICES, default=DEFAULT_SERVICE,
+                             help=f'Shipping service (default {DEFAULT_SERVICE})')
+# Not sure--price-group arg is useful..
+#PolicyArgParser.add_argument('--price-group', action='store_true',
+#                             help='create policy for USPS price group')
 PolicyArgParser.add_argument('--all', action='store_true',
                              help='create policy for all countries/price groups')
 PolicyArgParser.add_argument('--list-countries', action='store_true',
@@ -84,16 +91,6 @@ ConfigArgParser.add_argument('--set', nargs=2,
                              help='requires 2 args: config key & value')
 
 
-def func_importer(func_path):
-    """func_path is string of python import name ending with function name to import"""
-    log.info(f'loading func_path {func_path}')
-    path, funcname = func_path.rsplit('.', 1)
-    mod = importlib.import_module(path)
-    func = getattr(mod, funcname)
-    log.debug(f'loaded da func {func}')
-    return func
-
-
 def delegate_args(args):
     log.debug(f'delegate_args: {args}')
     if args.action == 'config':
@@ -103,28 +100,40 @@ def delegate_args(args):
             reset_config()
             print("\nNew config:", file=sys.stderr)
             pprint(dump_config(), stream=sys.stderr)
-        if args.set:
+        elif args.set:
             rowcount = set_config(args.set[0], args.set[1])
             print("\nNew config:", file=sys.stderr)
             pprint(dump_config(), stream=sys.stderr)
         elif args.dump:
             # always STDOUT when it is output asked for; STDERR when extra info
             pprint(dump_config(), stream=sys.stdout)
+
     elif args.action == 'init':
         if args.db:
             dbinit()
         elif args.reset_ingest_tables:
             recreate_ingest_tables()
+
     elif args.action == 'policy':
+        # primary purpose of --list-countries & --list-orphans is aid in
+        # maintaining COUNTRY_ALIASES, but also useful as reminder for country code
         if args.list_countries:
             list_countries()
         elif args.list_orphans:
             list_orphans()
-    elif args.action == 'ingest':
-        func_path = f'discoship.{args.provider}.fetch.fetch'
-        func = func_importer(func_path)
-        if args.provider == 'usps':
-            func(fetchall=args.all, cpg=args.cpg, rates=args.rates, service=args.service)
+        # generate for specific country
+        elif args.country:
+            policy = create_policy(service=args.service, country=args.country)
+            pprint(policy)
         else:
-            func()
+            raise RuntimeError("Unclear intent.  See policy --help")
+
+    elif args.action == 'ingest':
+        if args.provider == 'countries':
+            fetch_countries_data()
+        elif args.provider == 'discogs':
+            fetch_discogs_data()
+        elif args.provider == 'usps':
+            fetch_usps_data(fetchall=args.all, cpg=args.cpg, rates=args.rates,
+                            service=args.service)
 

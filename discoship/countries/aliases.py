@@ -12,7 +12,7 @@ $ sqlite3 discoship/data/discoship.db "select COUNT(*) from discogs_destination_
     AS discogs INNER JOIN usps_cpg ON discogs.country_name = usps_cpg.country_name;"
 180
 
-simplest option: map aliases to canonical spellings at insert time:
+simplest option: map aliases to "canonical" spellings at insert time:
 """
 
 COUNTRY_ALIASES = {
