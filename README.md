@@ -160,3 +160,9 @@ Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
     the option of using these scripts
   </dd>
 </dl>
+
+## AUTHOR
+I usually only operate my store when between programming gigs; if the
+[store](https://www.discogs.com/seller/kennethd/profile) is open, please buy a
+record!  And if you like the code, and have a Python gig, reach out & hire me!
+
