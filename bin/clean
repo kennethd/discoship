@@ -1,0 +1,18 @@
+#!/bin/bash
+
+RESET="\e[0m"
+BOLD="\e[1m"
+FGGRN="\e[32m"
+FGRED="\e[31m"
+FGYEL="\e[33m"
+
+stderr() { echo -e "$0: $*" >&2; }
+ok() { stderr "${FGGRN}${BOLD}ok:  $*${RESET}"; }
+err() { stderr "${FGRED}${BOLD}err:  $*${RESET}"; }
+info() { stderr "${FGYEL}${BOLD}info: $*${RESET}"; }
+die() { err "$*"; exit 99; }
+try() { "$@" && ok "$@" || die "$*"; }
+
+[ -f "./pyproject.toml" ] || die "Please run ./bin/clean from top-level directory of project"
+
+try rm -rf ./build ./discoship.egg-info ./venv*

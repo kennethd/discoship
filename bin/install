@@ -1,0 +1,44 @@
+#!/bin/bash
+
+RESET="\e[0m"
+BOLD="\e[1m"
+FGGRN="\e[32m"
+FGRED="\e[31m"
+FGYEL="\e[33m"
+
+stderr() { echo -e "$0: $*" >&2; }
+ok() { stderr "${FGGRN}${BOLD}ok:  $*${RESET}"; }
+err() { stderr "${FGRED}${BOLD}err:  $*${RESET}"; }
+info() { stderr "${FGYEL}${BOLD}info: $*${RESET}"; }
+die() { err "$*"; exit 99; }
+try() { "$@" && ok "$@" || die "$*"; }
+
+[ -f "./pyproject.toml" ] || die "Please run ./bin/install from top-level directory of project"
+
+# hopefully the [project] table is the only one with a 'name =' value
+PKGNAME=$( awk -F "=" '/name/ {print $2}' pyproject.toml | sed 's/[ '\''"]//g')
+info "detected packagename $PKGNAME"
+
+[[ ! -z "$VIRTUAL_ENV" ]] && export PATH="${PATH#$VIRTUAL_ENV/bin:}"
+info "PATH is $PATH"
+
+PYTHON=`which python3 || which python`
+info "found python @ $PYTHON"
+PY3VER=`$PYTHON -c 'import sys; print(".".join([str(c) for c in sys.version_info[0:2]]))' | tr -d '\n'`
+info "found python version $PY3VER"
+[[ "${PY3VER:0:1}" == "3" ]] || die "need python3"
+
+try find ./$PKGNAME ./tests -name '*.pyc' -exec rm '{}' \;
+try find ./$PKGNAME ./tests -path '*/__pycache__' -exec rmdir '{}' \+
+try rm -rf "venv${PY3VER}" ./build ./dist ./$PKGNAME.egg-info
+try $PYTHON -m venv "venv${PY3VER}"
+try . ./venv${PY3VER}/bin/activate
+# from here we want to use python from virtualenv, not system $PYTHON
+try python3 -m pip install -U pip setuptools wheel build
+# following convention of having 'dev' section in
+# [project.optional-dependencies] for pytest & flake8, etc..
+try pip install .[dev]
+try pip install -e .
+export PYTHONDONTWRITEBYTECODE=1
+try pytest --cov=$PKGNAME --verbose --showlocals
+##try pyflakes ./$PKGNAME
