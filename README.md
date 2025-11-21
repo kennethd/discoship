@@ -38,7 +38,6 @@ Create international shipping policies for discogs.com
 ^^^   ^^^^          ^^^^^^^^^^^^          ^^^^     ^^       ^^^^^    ^^       ^^^^^
 ```
 
-
 ## USPS Shipping Policies
 USPS *FCPIS* & *PMI* services are the only rates currently generated.
 
@@ -48,7 +47,6 @@ Discogs does not currently allow creating shipping policies via their API, so
 the best this project can do is generate pricing tables for the 20 Country
 Price Groups USPS uses to determine rates for international packages, which US
 residents can use as a guide when manually creating policies.
-
 
 ### USPS First-Class Package International Service
 
@@ -71,42 +69,36 @@ enough fee ($1.50 at time of writing) that as sender, I feel it to be worth it.
 ### USPS Priority Mail Express Internationsl
 
 
-## getting started
+## Developer Quickstart
+Originally, I expected to be able to create & manage shipping policies via the
+[Discogs API](https://www.discogs.com/developers/).  Unfortunately that
+functionality is not exposed; maybe it's for the best, it could cause a lot of headaches.
 
-Given the limitations of the Discogs API there is not much reason to run
-`discoship` locally, provided the published rate tables are up to date, but if
-you want to do it:
+Given the limitations, then, there is not much reason to run `discoship` locally,
+provided the published rate tables are up to date, but if you want to do it:
 
-Clone the repo:
-```
-$ cd ~/git   # or wherever you keep your repos
+### Dependencies
+The only dependency is [Python3](https://www.python.org/downloads/), and `bash`
+for the install script (which only creates a virtualenv & uses `pip` to install
+the package, so probably easy to work around for Windows users).  I think the
+oldest `python3` I've tested it with is `3.11`.
+
+### Install
+```sh
 $ git clone -o github git@github.com:kennethd/discoship.git
 $ cd discoship
+$ ./bin/install
+$ source ./venv-discoship/bin/activate
+$ which discoship
 ```
-Install:
-```
-$ python3 -mvenv ./venv-$(python3 -V | awk '{ split($2, a, "."); print a[1]"."a[2] }')
-```
-Depending on your version of Python3, your `venv` may be named differently, for me it is `venv-3.11`:
-```
-kenneth@fado:~/git/discoship (main) $ . ./venv-3.11/bin/activate
-(venv-3.11) kenneth@fado:~/git/discoship (main) $ pip install .
-```
-The first `.` in that first command is a `bash` alias for `source`, if your
-shell doesn't recognize it, try using `source`.  There's also no guarantee
-your shell is configured to change your prompt upon activating a Python
-virtualenv, if you don't see it, try `echo $VIRTUAL_ENV`, or just `which discoship`
+The last command should output something similar to `/home/kenneth/git/discoship/venv-discoship/bin/discoship`
 
-Outputs should look something like:
-```
-(venv-3.10) kenneth@x1:~/git/discoship (main)$ echo $VIRTUAL_ENV
-/home/kenneth/git/discoship/venv-3.10
-(venv-3.10) kenneth@x1:~/git/discoship (main)$ which discoship
-/home/kenneth/git/discoship/venv-3.10/bin/discoship
+The install script will have installed some dev tools; to run the unit tests, use `pytest`:
+```sh
+$ pytest --cov=discoship --verbose --showlocals
 ```
 
-## updating 
-
+### Update Data Tables
 If you want to update the database, to make sure the rates are current, you'll
 want to install the package in "developer mode":
 ```
@@ -147,3 +139,22 @@ Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
 
 
 
+## ROADMAP
+
+  * Upon receiving my first int'l order, I noticed transaction fees are not applied
+    to the subtotal only, but to shipping costs as well -- which comes to about
+    50-60&cent; for a typical stateside order, but eating 9% of a $60 shipping
+    bill sucks, and inflates the PayPal fees further; considering adding a
+    config option to compensate for fees on high int'l shipping costs
+
+## CHANGELOG
+
+### 2025-11-20
+<dl>
+  <dt>Added `./bin/install` & `./bin/clean` scripts</dt>
+  <dd>
+    Simplified install instructions/procedure.  This project doesn't warrant
+    external dependencies for a build system, but if you have `bash`, you have
+    the option of using these scripts
+  </dd>
+</dl>

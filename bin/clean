@@ -14,5 +14,5 @@ die() { err "$*"; exit 99; }
 try() { "$@" && ok "$@" || die "$*"; }
 
 [ -f "./pyproject.toml" ] || die "Please run ./bin/clean from top-level directory of project"
-
 try rm -rf ./build ./discoship.egg-info ./venv*
+[[ ! -z "$VIRTUAL_ENV" ]] && err "Warning: you have an active venv; don't forget to run 'deactivate'"

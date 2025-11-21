@@ -30,9 +30,9 @@ info "found python version $PY3VER"
 
 try find ./$PKGNAME ./tests -name '*.pyc' -exec rm '{}' \;
 try find ./$PKGNAME ./tests -path '*/__pycache__' -exec rmdir '{}' \+
-try rm -rf "venv${PY3VER}" ./build ./dist ./$PKGNAME.egg-info
-try $PYTHON -m venv "venv${PY3VER}"
-try . ./venv${PY3VER}/bin/activate
+try rm -rf "venv-$PKGNAME" ./build ./dist ./$PKGNAME.egg-info
+try $PYTHON -m venv "venv-$PKGNAME"
+try . ./venv-$PKGNAME/bin/activate
 # from here we want to use python from virtualenv, not system $PYTHON
 try python3 -m pip install -U pip setuptools wheel build
 # following convention of having 'dev' section in
@@ -42,3 +42,4 @@ try pip install -e .
 export PYTHONDONTWRITEBYTECODE=1
 try pytest --cov=$PKGNAME --verbose --showlocals
 ##try pyflakes ./$PKGNAME
+ok "to activate the virtualenv, run: 'source ./venv-$PKGNAME/bin/activate'"
