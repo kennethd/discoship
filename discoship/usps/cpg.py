@@ -1,12 +1,14 @@
-import bs4
 import logging
 import re
+
+import bs4
 
 from discoship.countries.aliases import COUNTRY_ALIASES
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
 from discoship.defs import DEFAULT_SERVICE, USPS_RATE_TABLES_URL, \
     USPS_SVC_FCPIS, USPS_SVC_PMEI, USPS_SVC_PMI
 from discoship.io import fetch_url
+from discoship.testing import save_bs4_data_fixture
 
 
 log = logging.getLogger(__name__)
@@ -77,6 +79,7 @@ SELECT_LAST_INGEST_DATE = """
 #         ...7 more <td> elements
 #         <td>6</td>                             <-- target col (8)
 #         ...2 more <td> elements
+@save_bs4_data_fixture
 def _parse_cpg_data_table(table_soup, service=DEFAULT_SERVICE):
     """parse bs4 table Tag object for {Country:Price Group} data for service
 

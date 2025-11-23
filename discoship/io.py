@@ -1,6 +1,9 @@
 import functools
 import requests
 
+from discoship.testing import save_output_for_caller
+
+
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
 
 
@@ -17,6 +20,7 @@ def requests_session(**headers):
 
 
 @functools.cache
+@save_output_for_caller
 def fetch_url(url, **headers):
     """fetches url & returns contents
 

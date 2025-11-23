@@ -29,6 +29,8 @@ DiscoShipArgParser.add_argument('-i', '--info', action='store_true',
                                 help='increases loglevel output')
 DiscoShipArgParser.add_argument('-d', '--debug', action='store_true',
                                 help='increases loglevel output to maximum')
+DiscoShipArgParser.add_argument('--save-fixture-data', action='store_true',
+                                help='write inputs & outputs of various functions to tests/data for unit tests')
 DiscoShipArgParser.add_argument('--version', action='version', version=VERSION,
                                 help='show version and exit')
 actions = DiscoShipArgParser.add_subparsers(dest='action', help='subcommands')
@@ -97,6 +99,10 @@ ListArgParser.add_argument('--orphans', action='store_true',
 
 def delegate_args(args):
     log.debug(f'delegate_args: {args}')
+    if args.save_fixture_data:
+        import discoship
+        discoship.testing.SAVE_FIXTURE_DATA = True
+
     if args.action == 'config':
         if args.reset:
             print("For reference, this was your config before reset:", file=sys.stderr)

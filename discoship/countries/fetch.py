@@ -5,6 +5,7 @@ import os
 from discoship.countries.aliases import COUNTRY_ALIASES
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
 from discoship.io import fetch_url
+from discoship.testing import save_bs4_data_fixture
 
 
 log = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ SELECT_LAST_INGEST_DATE = """
 """
 
 
+@save_bs4_data_fixture
 def _parse_iso3166_table_data(table_soup):
     """Parses BeautifulSoup table
 

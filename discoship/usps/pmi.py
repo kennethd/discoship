@@ -1,11 +1,13 @@
-import bs4
 from collections import defaultdict
 import logging
 import re
 
+import bs4
+
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
 from discoship.defs import USPS_RATE_TABLES_URL
 from discoship.io import fetch_url
+from discoship.testing import save_bs4_data_fixture
 
 
 log = logging.getLogger(__name__)
@@ -53,6 +55,7 @@ SELECT_LAST_INGEST_DATE = """
 """
 
 
+@save_bs4_data_fixture
 def _parse_pmi_rate_table(table_soup):
     """parse bs4 table Tag object for PMI price data
 
