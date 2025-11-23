@@ -14,5 +14,9 @@ die() { err "$*"; exit 99; }
 try() { "$@" && ok "$@" || die "$*"; }
 
 [ -f "./pyproject.toml" ] || die "Please run ./bin/clean from top-level directory of project"
-try rm -rf ./build ./discoship.egg-info ./venv*
-[[ ! -z "$VIRTUAL_ENV" ]] && err "Warning: you have an active venv; don't forget to run 'deactivate'"
+PKGNAME=$( awk -F "=" '/name/ {print $2}' pyproject.toml | sed 's/[ '\''"]//g')
+info "detected packagename $PKGNAME"
+try find ./$PKGNAME ./tests -name '*.pyc' -exec rm '{}' \;
+try find ./$PKGNAME ./tests -path '*/__pycache__' -exec rmdir '{}' \+
+try rm -rf "venv-$PKGNAME" ./build ./dist ./$PKGNAME.egg-info
+[[ ! -z "$VIRTUAL_ENV" ]] && err "you have an active venv; don't forget to run 'deactivate'"
