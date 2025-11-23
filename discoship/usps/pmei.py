@@ -4,8 +4,7 @@ import logging
 import re
 
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
-from discoship.defs import USPS_RATE_TABLES_URL
-from discoship.io import fetch_url
+from discoship.io import fetch_usps_rate_tables
 
 
 log = logging.getLogger(__name__)

@@ -1,6 +1,7 @@
 import functools
 import requests
 
+from discoship.defs import USPS_RATE_TABLES_URL
 from discoship.testing import save_output_for_caller
 
 
@@ -29,4 +30,8 @@ def fetch_url(url, **headers):
     sess = requests_session(**headers)
     response = sess.get(url)
     return response.text
+
+
+def fetch_usps_rate_tables(url=USPS_RATE_TABLES_URL, **headers):
+    return fetch_url(url, **headers)
 

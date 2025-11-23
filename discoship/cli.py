@@ -100,8 +100,8 @@ ListArgParser.add_argument('--orphans', action='store_true',
 def delegate_args(args):
     log.debug(f'delegate_args: {args}')
     if args.save_fixture_data:
-        import discoship
-        discoship.testing.SAVE_FIXTURE_DATA = True
+        import discoship  # noqa # pragma: no cover
+        discoship.testing.SAVE_FIXTURE_DATA = True  # pragma: no cover
 
     if args.action == 'config':
         if args.reset:

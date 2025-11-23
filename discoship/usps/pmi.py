@@ -5,8 +5,7 @@ import re
 import bs4
 
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
-from discoship.defs import USPS_RATE_TABLES_URL
-from discoship.io import fetch_url
+from discoship.io import fetch_usps_rate_tables
 from discoship.testing import save_bs4_data_fixture
 
 
@@ -140,7 +139,7 @@ def _parse_pmi_rate_table(table_soup):
 #         <td>$42.95</td>    <!-- PRICE CODE 1 -->
 #         <td>$56.70</td>    <!-- ETC... -->
 
-def fetch_pmi_rates_data(url=USPS_RATE_TABLES_URL):
+def fetch_pmi_rates_data():
     """parses price by weight per price_group table
 
     USPS maintains 20 Price Groups for international shipping, each country
@@ -157,7 +156,7 @@ def fetch_pmi_rates_data(url=USPS_RATE_TABLES_URL):
     log.info(f'fetching rates data from {url}')
     pmi_rates = { i:[] for i in range(1, 21) }
 
-    html = fetch_url(url)
+    html = fetch_usps_rate_tables()
     soup = bs4.BeautifulSoup(html, 'html.parser')
     h2 = soup.body.find('h2', string=re.compile(PMI_RATE_TABLE_HEADER_TEXT))
     assert h2.name == 'h2'

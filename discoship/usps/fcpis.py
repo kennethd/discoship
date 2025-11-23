@@ -5,8 +5,7 @@ import re
 import bs4
 
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
-from discoship.defs import USPS_RATE_TABLES_URL
-from discoship.io import fetch_url
+from discoship.io import fetch_usps_rate_tables
 from discoship.testing import save_bs4_data_fixture
 
 
@@ -100,7 +99,7 @@ def _parse_fcpis_rate_table(table_soup):
 #     <tr>
 #       <td>1–8</td>
 #       ...10 <td>s w/price including "$"sign (following rows have no "$")
-def fetch_fcpis_rates_data(url=USPS_RATE_TABLES_URL):
+def fetch_fcpis_rates_data():
     """parses price by weight per price_group table
 
     USPS maintains 20 Price Groups for international shipping, each country
@@ -114,7 +113,7 @@ def fetch_fcpis_rates_data(url=USPS_RATE_TABLES_URL):
     rates are returned for 4 increasing weight classes (8oz, 32oz, 48oz, 64oz)
     """
     log.info(f'fetching rates data from {url}')
-    html = fetch_url(url)
+    html = fetch_usps_rate_tables()
     soup = bs4.BeautifulSoup(html, 'html.parser')
     soup = soup.body.find(id='pe-content-document')
     atag = soup.find(id=f'a_{FCPIS_RATE_TABLE_HEADER_TEXT}')

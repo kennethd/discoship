@@ -8,15 +8,19 @@ from discoship.defs import *
 
 
 def test_global_options():
-    expect = Namespace(info=True, debug=False, action=None)
+    expect = Namespace(info=True, debug=False, save_fixture_data=False, action=None)
     for flag in ('-i', '--info'):
         args = cli.DiscoShipArgParser.parse_args([flag])
         assert args == expect
 
-    expect = Namespace(info=False, debug=True, action=None)
+    expect = Namespace(info=False, debug=True, save_fixture_data=False, action=None)
     for flag in ('-d', '--debug'):
         args = cli.DiscoShipArgParser.parse_args([flag])
         assert args == expect
+
+    expect = Namespace(info=False, debug=False, save_fixture_data=True, action=None)
+    args = cli.DiscoShipArgParser.parse_args(['--save-fixture-data'])
+    assert args == expect
 
 
 def test_init_all(mocker):
@@ -24,8 +28,8 @@ def test_init_all(mocker):
     mocker.patch('discoship.cli.fetch_usps_data')
     mocker.patch('discoship.cli.fetch_discogs_data')
     mocker.patch('discoship.cli.fetch_countries_data')
-    expect = Namespace(info=False, debug=False, action='init', all=True,
-                       db=False, reset_ingest_tables=False)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='init', all=True, db=False, reset_ingest_tables=False)
     args = cli.DiscoShipArgParser.parse_args(['init', '--all'])
     assert args == expect
     cli.delegate_args(args)
@@ -37,8 +41,8 @@ def test_init_all(mocker):
 
 def test_init_db(mocker):
     mocker.patch('discoship.cli.dbinit')
-    expect = Namespace(info=False, debug=False, action='init', all=False,
-                       db=True, reset_ingest_tables=False)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='init', all=False, db=True, reset_ingest_tables=False)
     args = cli.DiscoShipArgParser.parse_args(['init', '--db'])
     assert args == expect
     cli.delegate_args(args)
@@ -47,8 +51,8 @@ def test_init_db(mocker):
 
 def test_init_ingest_tables(mocker):
     mocker.patch('discoship.cli.recreate_ingest_tables')
-    expect = Namespace(info=False, debug=False, action='init', all=False,
-                       db=False, reset_ingest_tables=True)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='init', all=False, db=False, reset_ingest_tables=True)
     cmd = ['init', '--reset-ingest-tables']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -59,9 +63,9 @@ def test_init_ingest_tables(mocker):
 def test_ingest_usps_all(mocker):
     # --all with defaults
     mocker.patch('discoship.cli.fetch_usps_data')
-    expect = Namespace(info=False, debug=False, action='ingest',
-                       provider='usps', service=DEFAULT_SERVICE, all=True,
-                       cpg=False, rates=False)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='ingest', provider='usps', service=DEFAULT_SERVICE,
+                       all=True, cpg=False, rates=False)
     cmd = ['ingest', 'usps', '--all']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -75,9 +79,9 @@ def test_ingest_usps_all(mocker):
 def test_ingest_usps_other_options(mocker):
     # no --all ; no other defaults for UspsArgParser
     mocker.patch('discoship.cli.fetch_usps_data')
-    expect = Namespace(info=False, debug=False, action='ingest',
-                       provider='usps', service=USPS_SVC_PMI, all=False,
-                       cpg=True, rates=True)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='ingest', provider='usps', service=USPS_SVC_PMI,
+                       all=False, cpg=True, rates=True)
     cmd = ['ingest', 'usps', '--cpg', '--rates', '--service', USPS_SVC_PMI]
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -90,8 +94,8 @@ def test_ingest_usps_other_options(mocker):
 
 def test_ingest_discogs_options(mocker):
     mocker.patch('discoship.cli.fetch_discogs_data')
-    expect = Namespace(info=False, debug=False, action='ingest',
-                       provider='discogs', destinations=True)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='ingest', provider='discogs', destinations=True)
     cmd = ['ingest', 'discogs', '--destinations']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -101,8 +105,8 @@ def test_ingest_discogs_options(mocker):
 
 def test_ingest_countries_options(mocker):
     mocker.patch('discoship.cli.fetch_countries_data')
-    expect = Namespace(info=False, debug=False, action='ingest',
-                       provider='countries', iso3166=True)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='ingest', provider='countries', iso3166=True)
     cmd = ['ingest', 'countries', '--iso3166']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -112,8 +116,8 @@ def test_ingest_countries_options(mocker):
 
 def test_config_dump(mocker):
     mocker.patch('discoship.cli.dump_config')
-    expect = Namespace(info=False, debug=False, action='config', dump=True,
-                       reset=False, set=None)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='config', dump=True, reset=False, set=None)
     cmd = ['config', '--dump']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -124,8 +128,9 @@ def test_config_dump(mocker):
 def test_config_set(mocker):
     mocker.patch('discoship.cli.set_config')
     mocker.patch('discoship.cli.dump_config')
-    expect = Namespace(info=False, debug=False, action='config', dump=False,
-                       reset=False, set=['var-name', 'New Value'])
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='config', dump=False, reset=False,
+                       set=['var-name', 'New Value'])
     cmd = ['config', '--set', 'var-name', 'New Value']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -137,8 +142,8 @@ def test_config_set(mocker):
 def test_reset_config(mocker):
     mocker.patch('discoship.cli.reset_config')
     mocker.patch('discoship.cli.dump_config')
-    expect = Namespace(info=False, debug=False, action='config', dump=False,
-                       reset=True, set=None)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='config', dump=False, reset=True, set=None)
     cmd = ['config', '--reset']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -149,8 +154,8 @@ def test_reset_config(mocker):
 
 def test_list_countries(mocker):
     mocker.patch('discoship.cli.list_countries')
-    expect = Namespace(info=False, debug=False, action='list',
-                       countries=True, orphans=False)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='list', countries=True, orphans=False)
     cmd = ['list', '--countries']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -160,8 +165,8 @@ def test_list_countries(mocker):
 
 def test_list_orphans(mocker):
     mocker.patch('discoship.cli.list_orphans')
-    expect = Namespace(info=False, debug=False, action='list',
-                       countries=False, orphans=True)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='list', countries=False, orphans=True)
     cmd = ['list', '--orphans']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -178,8 +183,8 @@ def test_create_country_policy(mocker):
         cli.delegate_args(args)
     assert "Unclear intent." in str(exc)
 
-    expect = Namespace(info=False, debug=False, action='policy',
-                       country='nz', service=USPS_SVC_PMI, all=False)
+    expect = Namespace(info=False, debug=False, save_fixture_data=False,
+                       action='policy', country='nz', service=USPS_SVC_PMI, all=False)
     cmd = ['policy', '--service', USPS_SVC_PMI, '--country', 'nz']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
