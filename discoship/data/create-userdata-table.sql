@@ -1,8 +1,8 @@
 -- sqlite as kvs: https://sqlite.org/flextypegood.html
-DROP TABLE IF EXISTS config;
-CREATE TABLE config(name TEXT PRIMARY KEY, value) WITHOUT ROWID;
+DROP TABLE IF EXISTS userdata;
+CREATE TABLE userdata(name TEXT PRIMARY KEY, value) WITHOUT ROWID;
 
-INSERT INTO config (name, value) VALUES
+INSERT INTO userdata (name, value) VALUES
 -- SELECT DATETIME('now') returns the current UTC datetime
 ("last_ingest_usps_cpg", NULL),
 ("last_ingest_usps_fcpis_rates", NULL),

@@ -29,5 +29,6 @@ with open(os.path.sep.join([PKG_PATH, 'VERSION']), 'r') as fh:
 
 # init'ed db is included with package repo
 DB_PATH = os.path.sep.join([PKG_PATH, 'data', 'discoship.db'])
+USERDATA_PATH = os.path.sep.join([PKG_PATH, 'data', 'userdata.db'])
 SQL_INGEST_PATH = os.path.sep.join([PKG_PATH, 'data', 'create-ingest-tables.sql'])
-SQL_CONFIG_PATH = os.path.sep.join([PKG_PATH, 'data', 'create-config-table.sql'])
+SQL_CONFIG_PATH = os.path.sep.join([PKG_PATH, 'data', 'create-userdata-table.sql'])

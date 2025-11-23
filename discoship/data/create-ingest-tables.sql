@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS discogs_destination_countries;
 
 
 CREATE TABLE usps_service(
-    code VARCHAR NOT NULL PRIMARY KEY,
+    code VARCHAR NOT NULL COLLATE NOCASE PRIMARY KEY,
     name VARCHAR,
     max_weight_oz INTEGER,
     max_value REAL
@@ -23,8 +23,8 @@ CREATE TABLE usps_service(
 
 -- https://pe.usps.com/text/dmm300/Notice123.htm#_c419
 CREATE TABLE usps_cpg(
-    country_name VARCHAR NOT NULL,
-    usps_service_code VARCHAR NOT NULL,
+    country_name VARCHAR NOT NULL COLLATE NOCASE,
+    usps_service_code VARCHAR NOT NULL COLLATE NOCASE,
     price_group INTEGER NOT NULL,
     max_weight_lbs INTEGER NULL,  -- N/A for FCPIS
     flat_rate_price_group INTEGER NULL,  -- N/A for FCPIS
@@ -85,15 +85,18 @@ CREATE TABLE iso3166_countries(
     code2 VARCHAR NOT NULL,
     code3 VARCHAR NOT NULL
 );
-CREATE INDEX idx_iso3166_countries_official_name ON iso3166_countries(official_name);
-CREATE INDEX idx_iso3166_countries_code2 ON iso3166_countries(code2);
-CREATE INDEX idx_iso3166_countries_code3 ON iso3166_countries(code3);
+CREATE INDEX idx_iso3166_countries_official_name
+          ON iso3166_countries(official_name COLLATE NOCASE);
+CREATE INDEX idx_iso3166_countries_code2
+          ON iso3166_countries(code2 COLLATE NOCASE);
+CREATE INDEX idx_iso3166_countries_code3
+          ON iso3166_countries(code3 COLLATE NOCASE);
 
 
 -- the list of countries in the shipping policy editor
 -- https://www.discogs.com/settings/shipping
 CREATE TABLE discogs_destination_countries(
-    country_name VARCHAR NOT NULL PRIMARY KEY
+    country_name VARCHAR NOT NULL COLLATE NOCASE PRIMARY KEY
 );
 
 
@@ -164,3 +167,5 @@ VALUES
 ("PMEI", "Priority Mail Express Int'l", 160, 5000.00)
 ;
 
+-- legacy; prior to version 1.0.0 userdata.db was a table in this database
+DROP TABLE IF EXISTS config;

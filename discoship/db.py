@@ -2,14 +2,14 @@ from contextlib import contextmanager
 import logging
 import sqlite3
 
-from discoship.defs import DB_PATH, SQL_INGEST_PATH, SQL_CONFIG_PATH
+from discoship.defs import DB_PATH, SQL_INGEST_PATH, SQL_CONFIG_PATH, USERDATA_PATH
 
 
 log = logging.getLogger(__name__)
 
 
 @contextmanager
-def dbopen(readonly=False, row_factory=None, **connect_kwargs):
+def dbopen(db=DB_PATH, readonly=False, row_factory=None, **connect_kwargs):
     """contextmanager to obtain sqlite3 cursor
 
     connection will close automatically when context goes out of scope.
@@ -18,14 +18,15 @@ def dbopen(readonly=False, row_factory=None, **connect_kwargs):
     https://docs.python.org/3/library/sqlite3.html#sqlite3.connect
 
     yields sqlite3 cursor"""
-    log.info(f"dbopen: ro={readonly} row_factory={row_factory} connect_kwargs={connect_kwargs}")
+    log.debug(f"dbopen: {db} ro={readonly} row_factory={row_factory} connect_kwargs={connect_kwargs}")
     # https://www.sqlite.org/uri.html
     connect_kwargs["uri"] = True
     if readonly:
-        db_path = f"file:{DB_PATH}?mode=ro&cache=shared"
+        mode = "ro"
     else:
-        db_path = f"file:{DB_PATH}?mode=rwc&cache=shared"
-    log.debug(f"dbopen: db_path={db_path}")
+        mode = "rwc"
+    db_path = f"file:{db}?mode={mode}&cache=shared"
+    log.info(f"dbopen: db_path={db_path}")
     conn = sqlite3.connect(db_path, **connect_kwargs)
     conn.execute("PRAGMA foreign_keys = ON;")
 
@@ -49,12 +50,42 @@ def dbopen(readonly=False, row_factory=None, **connect_kwargs):
         conn.close()
 
 
-def execute(sql, params=None):
+def execute(sql, params=None, db=DB_PATH):
     """execute parameterized SQL with values interpolated from params
 
-    if params is tuple placeholders in sql use '?'
-
+    if params is tuple placeholders in sql use '?' (no quotes)
+    ```
+    cur.execute("INSERT INTO lang VALUES(?, ?)", params)
+    ```
     if params is dict, use named placeholders style:
+    ```
+    cur.execute("INSERT INTO lang VALUES(:name, :year)", params)
+    ```
+    https://docs.python.org/3/library/sqlite3.html#how-to-use-placeholders-to-bind-values-in-sql-queries
+
+    returns number of rows affected"""
+    log.debug(f"execute: {sql} {params}")
+    if not params:
+        params = ()
+
+    rowcount = 0
+    with dbopen(db) as cur:
+        cur.execute(sql, params)
+        rowcount = cur.rowcount
+    return rowcount
+
+
+def executemany(sql, data=None, db=DB_PATH):
+    """execute parameterized SQL for each element of seq data
+
+    data being a list of tuples or dicts, such as would be passed to
+    execute() one-by-one as `params`
+
+    if data is seq of tuples placeholders in sql use '?' (no quotes)
+    ```
+    cur.executemany("INSERT INTO lang VALUES(?, ?)", data)
+    ```
+    if data is seq of dicts, use named placeholders style:
     ```
     data = (
         {"name": "C", "year": 1972},
@@ -67,51 +98,33 @@ def execute(sql, params=None):
     https://docs.python.org/3/library/sqlite3.html#how-to-use-placeholders-to-bind-values-in-sql-queries
 
     returns number of rows affected"""
-    log.debug(f"execute: {sql} {params}")
-    if not params:
-        params = ()
-
-    rowcount = 0
-    with dbopen() as cur:
-        cur.execute(sql, params)
-        rowcount = cur.rowcount
-    return rowcount
-
-
-def executemany(sql, params=None):
-    """execute parameterized SQL for each element of params
-
-    params being a list of tuples or dicts, such as would be passed to
-    execute() one-by-one
-
-    returns number of rows affected"""
-    log.debug(f"executemany: {sql} {params}")
-    if not params:
+    log.debug(f"executemany: {sql} {data}")
+    if not data:
         raise ValueError("executemany() without values makes no sense")
 
     rowcount = 0
-    with dbopen() as cur:
-        cur.executemany(sql, params)
+    with dbopen(db) as cur:
+        cur.executemany(sql, data)
         rowcount = cur.rowcount
     return rowcount
 
 
-def executescript(sql_stmts):
+def executescript(sql_stmts, db=DB_PATH):
     """execute all statements in string sql_stmts"""
     log.debug(f"executescript: {sql_stmts[:256]}...")
-    with dbopen() as cur:
+    with dbopen(db) as cur:
         cur.executescript(sql_stmts)
 
 
-def executefile(sql_path):
+def executefile(sql_path, db=DB_PATH):
     """execute all statements in file sql_path"""
     log.debug(f"executefile: {sql_path}")
     with open(sql_path) as fh:
         sql_stmts = fh.read()
-        executescript(sql_stmts)
+        executescript(sql_stmts, db)
 
 
-def select(sql, params=None):
+def select(sql, params=None, db=DB_PATH):
     """execute sql statement & return list of row values as sqlite3.Rows
 
     returns list of sqlite3.Row objects"""
@@ -119,12 +132,12 @@ def select(sql, params=None):
     if not params:
         params = ()
 
-    with dbopen(readonly=True, row_factory=sqlite3.Row) as cur:
+    with dbopen(db, readonly=True, row_factory=sqlite3.Row) as cur:
         cur.execute(sql, params)
         return cur.fetchall()
 
 
-def selectone(sql, params=None):
+def selectone(sql, params=None, db=DB_PATH):
     """execute sql statement & return row values as sqlite3.Row object
 
     sqlite3.Row objects may be accessed by tuple index or case-insensitive
@@ -145,7 +158,7 @@ def selectone(sql, params=None):
     if not params:
         params = ()
 
-    with dbopen(readonly=True, row_factory=sqlite3.Row) as cur:
+    with dbopen(db, readonly=True, row_factory=sqlite3.Row) as cur:
         cur.execute(sql, params)
         return cur.fetchone()
 
@@ -155,8 +168,8 @@ def dbinit():
 
     * * * WARNING: DESTROYS ALL DATA * * *
     drops all existing tables & recreates schema"""
-    executefile(SQL_CONFIG_PATH)
-    executefile(SQL_INGEST_PATH)
+    executefile(SQL_CONFIG_PATH, db=USERDATA_PATH)
+    executefile(SQL_INGEST_PATH, db=DB_PATH)
 
 
 def recreate_ingest_tables():
@@ -165,7 +178,7 @@ def recreate_ingest_tables():
     ALL INGEST SCRIPTS WILL NEED TO BE RE-RUN
 
     Does not destroy user-modified data"""
-    executefile(SQL_INGEST_PATH)
+    executefile(SQL_INGEST_PATH, db=DB_PATH)
 
 
 def reset_config():
@@ -174,20 +187,21 @@ def reset_config():
     ALL USER DEFINED CONFIGS WILL BE LOST
 
     Consider backing up your config first"""
-    executefile(SQL_CONFIG_PATH)
+    executefile(SQL_CONFIG_PATH, db=USERDATA_PATH)
 
 
 def dump_config():
     """selects everything from config table for backup/display"""
-    rows = select("SELECT * FROM config")
+    rows = select("SELECT * FROM userdata", db=USERDATA_PATH)
     config = { row[0]: row[1] for row in rows }
     return config
 
 
 def set_config(key, value):
-    """Update config table value"""
+    """Update config value in `userdata` table"""
     params = (value.strip(), key.strip())
-    rowcount = execute("UPDATE config SET value = ? WHERE name = ?", params)
+    rowcount = execute("UPDATE userdata SET value = ? WHERE name = ?", params,
+                       db=USERDATA_PATH)
     log.info(f"set_config: updated {rowcount} rows")
     return rowcount
 

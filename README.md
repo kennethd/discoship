@@ -98,27 +98,31 @@ The install script will have installed some dev tools; to run the unit tests, us
 $ pytest --cov=discoship --verbose --showlocals
 ```
 
-### Update Data Tables
-If you want to update the database, to make sure the rates are current, you'll
-want to install the package in "developer mode":
-```
-kenneth@fado ~/git/discoship (main) $ . ./venv3.11/bin/activate
-(venv3.11) kenneth@fado ~/git/discoship (main) $ pip install -e .[dev]
-(venv3.11) kenneth@fado ~/git/discoship (main) $ discoship ingest usps --all
-```
+The `install` script just creates a virtualenv & installs `discoship` and
+dependencies into it, if you are on a system without `bash`, just follow along
+with the script from the line that looks something like `python3 -m venv ./venv-discoship`
 
-If you want to contribute the updates back to upstream (this project), make
-sure to create a branch first:
-
-
-## reingest everything from scratch
-(debug flag `-d` optional)
+### Ingest
+You can now ingest all required data from USPS & populate discogs "ship-to
+countries" data:
+```sh
+$ discoship --info init --all
 ```
- $ discoship -d init --db
- $ discoship -d ingest usps --all
- $ discoship -d ingest discogs --destinations
- $ discoship -d ingest countries --iso3166
+If anything fails, replacing `--info` with `--debug` might provide more insight.
+
+You can re-run specific pieces of the ingest process, see `discoship --help`
+and `discoship ingest --help`, `discoship ingest usps --help` etc
+
+### Periodic updates
+Because `discoship init --all` recreates the entire database from scratch,
+rate change info can be re-ingested specifically:
+```sh
+$ discoship --info ingest usps --all
 ```
+You probably want to do that on a branch so a PR can be created to merge it upstream.
+
+### Generate policies
+
 
 ## configs
 
@@ -126,14 +130,14 @@ sure to create a branch first:
 
 My (admittedly small sample size) experiments packing up records and weighing
 them resulted in these settings:
-```
+```json
 {
   'weight_1_lp_oz': 20,
   'weight_2_lp_oz': 34,
   'weight_3_lp_oz': 42,
   'weight_4_lp_oz': 52,
   'weight_5_lp_oz': 60,
-  'weight_6_lp_oz': 70,
+  'weight_6_lp_oz': 70
 }
 ```
 Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
@@ -150,6 +154,14 @@ Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
     config option to compensate for fees on high int'l shipping costs
 
 ## CHANGELOG
+
+### 2025-11-23: version 1.0.0
+<dl>
+  <dt>Moved `config` table to new `userdata.db`</dt>
+  <dd>re-ingested usps rate data can be committed independently of user config</dd>
+  <dt>Added `init --all`</dt>
+  <dd>Now all the pieces work independently, add convenient post-install "do everything" flag</dt>
+</dl>
 
 ### 2025-11-20
 <dl>

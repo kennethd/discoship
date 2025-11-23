@@ -7,6 +7,9 @@ from discoship.usps.pmi import fetch_pmi_rates_data, ingest_pmi_rates_data
 #from discoship.usps.pmei import fetch_pmei_rates_data, ingest_pmei_rates_data
 
 
+log = logging.getLogger(__name__)
+
+
 def fetch(fetchall=False, cpg=False, rates=False, service=None):
     """entrypoint for ingesting data from usps
 
@@ -26,6 +29,8 @@ def fetch(fetchall=False, cpg=False, rates=False, service=None):
     Raises `RuntimeError` if args do not specify something to do.
     Parsers may raise `AssertionError` if source HTML changes.
     """
+    log.info(f"fetch(fetchall={fetchall}, cpg={cpg}, rates={rates}, service={service})")
+
     if service not in [None] + list(USPS_SERVICES):
         raise ValueError(f"Unrecognized service: {service}")
     # Q: what should happen: discoship ingest usps --service FCPIS

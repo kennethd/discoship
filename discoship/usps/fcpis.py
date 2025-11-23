@@ -3,7 +3,7 @@ from collections import defaultdict
 import logging
 import re
 
-from discoship.db import execute, executemany, selectone
+from discoship.db import USERDATA_PATH, execute, executemany, selectone
 from discoship.defs import USPS_RATE_TABLES_URL
 from discoship.io import fetch_url
 
@@ -32,12 +32,12 @@ INSERT_USPS_FCPIS_RATES = """
 """
 
 UPDATE_LAST_INGEST_DATE = """
-  UPDATE config SET value = DATETIME('now')
+  UPDATE userdata SET value = DATETIME('now')
   WHERE name = 'last_ingest_usps_fcpis_rates';
 """
 
 SELECT_LAST_INGEST_DATE = """
-  SELECT value FROM config WHERE name = 'last_ingest_usps_fcpis_rates';
+  SELECT value FROM userdata WHERE name = 'last_ingest_usps_fcpis_rates';
 """
 
 
@@ -49,6 +49,7 @@ def _parse_fcpis_rate_table(table_soup):
     May raise AssertionError if source HTML changes
 
     returns dict {price_group: [rate, rate, rate, rate]}"""
+    log.info('Parsing FCPIS rate table')
     assert isinstance(table_soup, bs4.element.Tag)
     assert table_soup.name == 'table'
     #print(table_soup.contents)
@@ -129,7 +130,7 @@ def fetch_fcpis_rates_data(url=USPS_RATE_TABLES_URL):
         safety += 1
         if safety >= 24:
             raise ValueError('Expected tables not found. Has source HTML changed?')
-    log.info(f'Fetched rate data for price groups: {rates_data}')
+    log.debug(f'Fetched rate data for price groups: {rates_data}')
     #print(rates_data)
     return rates_data
 
@@ -152,15 +153,16 @@ def ingest_fcpis_rates_data(rates_data):
     2            18.05           26.6            39              51.05
     3            20              37.35           56.25           74.35
     """
-    log.debug(f'ingest_fcpis_rates_data: {rates_data}')
+    log.info('ingesting fcpis rates data')
+    log.debug(rates_data)
     # incoming rates_data is formatted as dict {price_group: [rates]}:
     # {'1': ['17.85', '26.00', '38.50', '47.60'], ...}
     vals = [ (k, v[0], v[1], v[2], v[3]) for k, v in rates_data.items() ]
     #print(vals)
     rowcount = executemany(INSERT_USPS_FCPIS_RATES, vals)
     log.info(f'ingest_fcpis_rates_data: updated {rowcount} rows')
-    rowcount = execute(UPDATE_LAST_INGEST_DATE)
+    rowcount = execute(UPDATE_LAST_INGEST_DATE, db=USERDATA_PATH)
     assert rowcount == 1
-    row = selectone(SELECT_LAST_INGEST_DATE)
+    row = selectone(SELECT_LAST_INGEST_DATE, db=USERDATA_PATH)
     log.info(f'updated last_ingest_usps_fcpis_rates: {row[0]} (UTC)')
 

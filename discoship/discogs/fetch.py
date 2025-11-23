@@ -10,7 +10,7 @@ import logging
 import os
 
 from discoship.countries.aliases import COUNTRY_ALIASES
-from discoship.db import execute, executemany, selectone
+from discoship.db import USERDATA_PATH, execute, executemany, selectone
 from discoship.defs import PKG_PATH
 
 
@@ -18,6 +18,7 @@ log = logging.getLogger(__name__)
 
 
 SHIP_DESTS_PATH = os.path.sep.join([PKG_PATH, 'data', 'discogs-shipping-destinations.htm'])
+
 # due to the organisation of data in the html, some unwanted subheaders will
 # appear in results when selecting on css class 'region-name', though they are
 # not shipping destinations themselves
@@ -39,12 +40,12 @@ INSERT_DISCOGS_COUNTRIES = """
 """
 
 UPDATE_LAST_INGEST_DATE = """
-  UPDATE config SET value = DATETIME('now')
+  UPDATE userdata SET value = DATETIME('now')
   WHERE name = 'last_ingest_discogs_countries';
 """
 
 SELECT_LAST_INGEST_DATE = """
-  SELECT value FROM config WHERE name = 'last_ingest_discogs_countries';
+  SELECT value FROM userdata WHERE name = 'last_ingest_discogs_countries';
 """
 
 
@@ -77,13 +78,14 @@ def ingest_destinations(destinations):
     $ discoship ingest discogs --destinations
     ```
     """
-    log.debug(f'ingest discogs destinations: {destinations}')
+    log.info('ingesting discogs destinations')
+    log.debug(destinations)
     vals = [ tuple([c]) for c in destinations ]
     rowcount = executemany(INSERT_DISCOGS_COUNTRIES, vals)
     log.info(f'ingest_destinations: updated {rowcount} rows')
-    rowcount = execute(UPDATE_LAST_INGEST_DATE)
+    rowcount = execute(UPDATE_LAST_INGEST_DATE, db=USERDATA_PATH)
     assert rowcount == 1
-    row = selectone(SELECT_LAST_INGEST_DATE)
+    row = selectone(SELECT_LAST_INGEST_DATE, db=USERDATA_PATH)
     log.info(f'updated last_ingest_discogs_countries: {row[0]} (UTC)')
 
 

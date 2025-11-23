@@ -3,7 +3,7 @@ from collections import defaultdict
 import logging
 import re
 
-from discoship.db import execute, executemany, selectone
+from discoship.db import USERDATA_PATH, execute, executemany, selectone
 from discoship.defs import USPS_RATE_TABLES_URL
 from discoship.io import fetch_url
 
@@ -44,12 +44,12 @@ INSERT_USPS_PMI_RATES = """
 """
 
 UPDATE_LAST_INGEST_DATE = """
-  UPDATE config SET value = DATETIME('now')
+  UPDATE userdata SET value = DATETIME('now')
   WHERE name = 'last_ingest_usps_pmi_rates';
 """
 
 SELECT_LAST_INGEST_DATE = """
-  SELECT value FROM config WHERE name = 'last_ingest_usps_pmi_rates';
+  SELECT value FROM userdata WHERE name = 'last_ingest_usps_pmi_rates';
 """
 
 
@@ -62,6 +62,7 @@ def _parse_pmi_rate_table(table_soup):
     May raise AssertionError if source HTML changes
 
     returns dict {price_group: [list of rates]}"""
+    log.info('parsing pmi rate table')
     assert isinstance(table_soup, bs4.element.Tag)
     assert table_soup.name == 'table'
     #print(table_soup.contents)
@@ -185,14 +186,15 @@ def ingest_pmi_rates_data(pmi_rates_data):
     $ discoship ingest usps --rates --pmi
     ```
     """
-    log.debug(f'ingest_pmi_rates_data: {pmi_rates_data}')
+    log.info('ingesting pmi rates data')
+    log.debug(pmi_rates_data)
     # incoming rates_data is formatted as dict {price_group: [rates]}:
     # {'1': ['17.85', '26.00', '38.50', '47.60'], ...}
     vals = [ tuple([k] + v) for k, v in pmi_rates_data.items() ]
     rowcount = executemany(INSERT_USPS_PMI_RATES, vals)
     log.info(f'ingest_pmi_rates_data: updated {rowcount} rows')
-    rowcount = execute(UPDATE_LAST_INGEST_DATE)
+    rowcount = execute(UPDATE_LAST_INGEST_DATE, db=USERDATA_PATH)
     assert rowcount == 1
-    row = selectone(SELECT_LAST_INGEST_DATE)
+    row = selectone(SELECT_LAST_INGEST_DATE, db=USERDATA_PATH)
     log.info(f'updated last_ingest_usps_pmi_rates: {row[0]} (UTC)')
 

@@ -3,7 +3,7 @@ import logging
 import re
 
 from discoship.countries.aliases import COUNTRY_ALIASES
-from discoship.db import execute, executemany, selectone
+from discoship.db import USERDATA_PATH, execute, executemany, selectone
 from discoship.defs import DEFAULT_SERVICE, USPS_RATE_TABLES_URL, \
     USPS_SVC_FCPIS, USPS_SVC_PMEI, USPS_SVC_PMI
 from discoship.io import fetch_url
@@ -46,12 +46,12 @@ INSERT_USPS_CPG = """
 """
 
 UPDATE_LAST_INGEST_DATE = """
-  UPDATE config SET value = DATETIME('now')
+  UPDATE userdata SET value = DATETIME('now')
   WHERE name = 'last_ingest_usps_cpg';
 """
 
 SELECT_LAST_INGEST_DATE = """
-  SELECT value FROM config WHERE name = 'last_ingest_usps_cpg';
+  SELECT value FROM userdata WHERE name = 'last_ingest_usps_cpg';
 """
 
 
@@ -85,6 +85,7 @@ def _parse_cpg_data_table(table_soup, service=DEFAULT_SERVICE):
     May raise AssertionError if source HTML changes
 
     returns dict {country: price_group}"""
+    log.info('parsing cpg data table')
     assert isinstance(table_soup, bs4.element.Tag)
     assert table_soup.name == 'table'
     # remove all <sup> tags used for footnotes in source table
@@ -182,7 +183,8 @@ def ingest_cpg_data(cpg_data, service=DEFAULT_SERVICE):
     Albania              FCPIS              3
     Algeria              FCPIS              5
     ```"""
-    log.debug(f'ingest_cpg_data: service={service} {cpg_data}')
+    log.info(f'ingest_cpg_data: service={service}')
+    log.debug(cpg_data)
     # incoming cpg_data is formatted as:
     # {'Afghanistan': ('4', None, None), 'Albania': ('3', None, None), ...}
     # tuples containing: (price_group for service, max_weight_lbs, flat_rate_price_group)
@@ -192,8 +194,8 @@ def ingest_cpg_data(cpg_data, service=DEFAULT_SERVICE):
     #print(vals)
     rowcount = executemany(INSERT_USPS_CPG, vals)
     log.info(f'ingest_cpg_data: updated {rowcount} rows')
-    rowcount = execute(UPDATE_LAST_INGEST_DATE)
+    rowcount = execute(UPDATE_LAST_INGEST_DATE, db=USERDATA_PATH)
     assert rowcount == 1
-    row = selectone(SELECT_LAST_INGEST_DATE)
+    row = selectone(SELECT_LAST_INGEST_DATE, db=USERDATA_PATH)
     log.info(f'updated last_ingest_usps_cpg: {row[0]} (UTC)')
 

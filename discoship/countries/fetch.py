@@ -3,7 +3,7 @@ import logging
 import os
 
 from discoship.countries.aliases import COUNTRY_ALIASES
-from discoship.db import execute, executemany, selectone
+from discoship.db import USERDATA_PATH, execute, executemany, selectone
 from discoship.io import fetch_url
 
 
@@ -20,12 +20,12 @@ INSERT_ISO3166_COUNTRIES = """
 """
 
 UPDATE_LAST_INGEST_DATE = """
-  UPDATE config SET value = DATETIME('now')
+  UPDATE userdata SET value = DATETIME('now')
   WHERE name = 'last_ingest_iso3166_countries';
 """
 
 SELECT_LAST_INGEST_DATE = """
-  SELECT value FROM config WHERE name = 'last_ingest_iso3166_countries';
+  SELECT value FROM userdata WHERE name = 'last_ingest_iso3166_countries';
 """
 
 
@@ -40,6 +40,7 @@ def _parse_iso3166_table_data(table_soup):
 
     returns dict {'country_name': ('Official Name', code2, code3), ...}
     """
+    log.info('parsing iso3166 table data')
     assert isinstance(table_soup, bs4.element.Tag)
     assert table_soup.name == 'table'
     # remove all <sup> tags used for footnotes in source table
@@ -49,6 +50,7 @@ def _parse_iso3166_table_data(table_soup):
     trs = tdata.find_all('tr')
 
     countries = {}
+    # TODO: finish whatever I was doing with aliases...
     aliases = []
     for tr in trs:
         tds = tr.find_all('td')
@@ -70,16 +72,17 @@ def _parse_iso3166_table_data(table_soup):
             for name in names:
                 name = COUNTRY_ALIASES.get(name, name)
                 countries[name] = (official_name, code2, code3)
-    print(aliases)
-    print(countries.keys())
+    #print(aliases)
+    #print(countries.keys())
     return countries
 
 
-def fetch_iso3166_countries():
+def fetch_iso3166_countries(url=ISO3166_COUNTRIES_URL):
     """Scrape ISO3166 Country data
 
     returns list of tuples: (country_name, official_name, code2, code3)"""
-    html = fetch_url(ISO3166_COUNTRIES_URL)
+    log.info(f'fetching iso3166 country data from {url}')
+    html = fetch_url(url)
     soup = bs4.BeautifulSoup(html, 'html.parser')
     h2 = soup.body.find('h2', id=ISO3166_H2_ID)
 
@@ -109,9 +112,9 @@ def ingest_iso3166_countries(countries):
     #log.debug(f'ingest iso3166 countries: {countries}')
     rowcount = executemany(INSERT_ISO3166_COUNTRIES, countries)
     log.info(f'ingest_iso3166_countries: updated {rowcount} rows')
-    rowcount = execute(UPDATE_LAST_INGEST_DATE)
+    rowcount = execute(UPDATE_LAST_INGEST_DATE, db=USERDATA_PATH)
     assert rowcount == 1
-    row = selectone(SELECT_LAST_INGEST_DATE)
+    row = selectone(SELECT_LAST_INGEST_DATE, db=USERDATA_PATH)
     log.info(f'updated last_ingest_iso3166_countries: {row[0]} (UTC)')
 
 

@@ -33,6 +33,9 @@ dev = [
 [tool.setuptools]
 packages = [
     "discoship",
+    "discoship.countries",
+    "discoship.discogs",
+    "discoship.policy",
     "discoship.usps",
 ]
 
@@ -49,8 +52,9 @@ discoship = [
     "data/discoship.db",
     "data/create-ingest-tables.sql",
     "data/create-user-tables.sql",
-    "data/create-config-table.sql",
+    "data/create-userdata-table.sql",
     "data/discogs-shipping-destinations.htm",
+    "data/userdata.db",
 ]
 
 [tool.coverage.report]
