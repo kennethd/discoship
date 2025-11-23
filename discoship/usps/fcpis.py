@@ -112,7 +112,7 @@ def fetch_fcpis_rates_data():
     returns dict {price_group: [rate, rate, rate, rate]} where for each price_group
     rates are returned for 4 increasing weight classes (8oz, 32oz, 48oz, 64oz)
     """
-    log.info(f'fetching rates data from {url}')
+    log.info('fetching FCPIS rates data')
     html = fetch_usps_rate_tables()
     soup = bs4.BeautifulSoup(html, 'html.parser')
     soup = soup.body.find(id='pe-content-document')

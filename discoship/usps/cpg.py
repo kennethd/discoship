@@ -148,7 +148,7 @@ def fetch_cpg_data(service=DEFAULT_SERVICE):
     """parses Country Price Group data from pe.usps.com
 
     returns dict {country: price_group}"""
-    log.info(f"fetching CPG data from {url}")
+    log.info("fetching CPG data")
     cpg_data = {}
     html = fetch_usps_rate_tables()
     soup = bs4.BeautifulSoup(html, 'html.parser')

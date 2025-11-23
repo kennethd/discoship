@@ -153,7 +153,7 @@ def fetch_pmi_rates_data():
     returns dict {price_group: [rates]} where for each price_group rates are
     returned for 10 weight classes (up to 1lb, ..., up to 10lbs)
     """
-    log.info(f'fetching rates data from {url}')
+    log.info('fetching PMI rates data')
     pmi_rates = { i:[] for i in range(1, 21) }
 
     html = fetch_usps_rate_tables()
