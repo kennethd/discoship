@@ -19,10 +19,26 @@ def test_global_options():
         assert args == expect
 
 
+def test_init_all(mocker):
+    mocker.patch('discoship.cli.dbinit')
+    mocker.patch('discoship.cli.fetch_usps_data')
+    mocker.patch('discoship.cli.fetch_discogs_data')
+    mocker.patch('discoship.cli.fetch_countries_data')
+    expect = Namespace(info=False, debug=False, action='init', all=True,
+                       db=False, reset_ingest_tables=False)
+    args = cli.DiscoShipArgParser.parse_args(['init', '--all'])
+    assert args == expect
+    cli.delegate_args(args)
+    cli.dbinit.assert_called()
+    cli.fetch_discogs_data.assert_called()
+    cli.fetch_countries_data.assert_called()
+    cli.fetch_usps_data.assert_called_with(fetchall=True)
+
+
 def test_init_db(mocker):
     mocker.patch('discoship.cli.dbinit')
-    expect = Namespace(info=False, debug=False, action='init', db=True,
-                       reset_ingest_tables=False)
+    expect = Namespace(info=False, debug=False, action='init', all=False,
+                       db=True, reset_ingest_tables=False)
     args = cli.DiscoShipArgParser.parse_args(['init', '--db'])
     assert args == expect
     cli.delegate_args(args)
@@ -31,8 +47,8 @@ def test_init_db(mocker):
 
 def test_init_ingest_tables(mocker):
     mocker.patch('discoship.cli.recreate_ingest_tables')
-    expect = Namespace(info=False, debug=False, action='init', db=False,
-                       reset_ingest_tables=True)
+    expect = Namespace(info=False, debug=False, action='init', all=False,
+                       db=False, reset_ingest_tables=True)
     cmd = ['init', '--reset-ingest-tables']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
@@ -131,31 +147,29 @@ def test_reset_config(mocker):
     cli.dump_config.assert_called()
 
 
-def test_policy_list_countries(mocker):
+def test_list_countries(mocker):
     mocker.patch('discoship.cli.list_countries')
-    expect = Namespace(info=False, debug=False, action='policy',
-                       country=None, service='FCPIS', all=False,
-                       list_countries=True, list_orphans=False)
-    cmd = ['policy', '--list-countries']
+    expect = Namespace(info=False, debug=False, action='list',
+                       countries=True, orphans=False)
+    cmd = ['list', '--countries']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
     cli.delegate_args(args)
     cli.list_countries.assert_called()
 
 
-def test_policy_list_orphans(mocker):
+def test_list_orphans(mocker):
     mocker.patch('discoship.cli.list_orphans')
-    expect = Namespace(info=False, debug=False, action='policy',
-                       country=None, service='FCPIS', all=False,
-                       list_countries=False, list_orphans=True)
-    cmd = ['policy', '--list-orphans']
+    expect = Namespace(info=False, debug=False, action='list',
+                       countries=False, orphans=True)
+    cmd = ['list', '--orphans']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
     cli.delegate_args(args)
     cli.list_orphans.assert_called()
 
 
-def test_policy_create_policy(mocker):
+def test_create_country_policy(mocker):
     mocker.patch('discoship.cli.create_policy')
 
     # test expected error without args
@@ -165,13 +179,10 @@ def test_policy_create_policy(mocker):
     assert "Unclear intent." in str(exc)
 
     expect = Namespace(info=False, debug=False, action='policy',
-                       country='nz', service=USPS_SVC_PMI, all=False,
-                       list_countries=False, list_orphans=False)
+                       country='nz', service=USPS_SVC_PMI, all=False)
     cmd = ['policy', '--service', USPS_SVC_PMI, '--country', 'nz']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
     cli.delegate_args(args)
     cli.create_policy.assert_called_with(service=args.service, country=args.country)
-
-
 

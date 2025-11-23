@@ -60,6 +60,8 @@ CountriesArgParser.add_argument('--iso3166', action='store_true',
                                 help='Ingest ISO3166 Country Codes & official country names')
 
 InitArgParser = actions.add_parser('init', help='initialize resources')
+InitArgParser.add_argument('--all', action='store_true',
+                           help='init db and run all ingest scripts [WARNING: DESTROYS ALL DATA]')
 InitArgParser.add_argument('--db', action='store_true',
                            help='recreate entire db from scratch [WARNING: DESTROYS ALL DATA]')
 # --reset-ingest-tables useful for schema changes during dev without losing config
@@ -77,10 +79,6 @@ PolicyArgParser.add_argument('--service', choices=USPS_SERVICES, default=DEFAULT
 #                             help='create policy for USPS price group')
 PolicyArgParser.add_argument('--all', action='store_true',
                              help='create policy for all countries/price groups')
-PolicyArgParser.add_argument('--list-countries', action='store_true',
-                             help='list recognized countries & 2-letter codes')
-PolicyArgParser.add_argument('--list-orphans', action='store_true',
-                             help='list country names from ISO & discogs tables with no match for join')
 
 ConfigArgParser = actions.add_parser('config', help='manage config')
 ConfigArgParser.add_argument('--dump', action='store_true',
@@ -89,6 +87,12 @@ ConfigArgParser.add_argument('--reset', action='store_true',
                              help='reset config to defaults')
 ConfigArgParser.add_argument('--set', nargs=2,
                              help='requires 2 args: config key & value')
+
+ListArgParser = actions.add_parser('list', help='list things in the db')
+ListArgParser.add_argument('--countries', action='store_true',
+                           help='list recognized countries & 2-letter codes')
+ListArgParser.add_argument('--orphans', action='store_true',
+                           help='list country names from ISO & discogs tables with no match for join')
 
 
 def delegate_args(args):
@@ -111,18 +115,24 @@ def delegate_args(args):
     elif args.action == 'init':
         if args.db:
             dbinit()
+        elif args.all:
+            dbinit()
+            fetch_countries_data()
+            fetch_discogs_data()
+            fetch_usps_data(fetchall=True)
         elif args.reset_ingest_tables:
             recreate_ingest_tables()
 
-    elif args.action == 'policy':
-        # primary purpose of --list-countries & --list-orphans is aid in
+    elif args.action == 'list':
+        # primary purpose of list --countries & list --orphans is aid in
         # maintaining COUNTRY_ALIASES, but also useful as reminder for country code
-        if args.list_countries:
+        if args.countries:
             list_countries()
-        elif args.list_orphans:
+        elif args.orphans:
             list_orphans()
-        # generate for specific country
-        elif args.country:
+
+    elif args.action == 'policy':
+        if args.country:
             policy = create_policy(service=args.service, country=args.country)
             pprint(policy)
         else:
