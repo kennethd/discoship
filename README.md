@@ -132,12 +132,12 @@ My (admittedly small sample size) experiments packing up records and weighing
 them resulted in these settings:
 ```json
 {
-  'weight_1_lp_oz': 20,
-  'weight_2_lp_oz': 34,
-  'weight_3_lp_oz': 42,
-  'weight_4_lp_oz': 52,
-  'weight_5_lp_oz': 60,
-  'weight_6_lp_oz': 70
+  "weight_1_lp_oz": 20,
+  "weight_2_lp_oz": 34,
+  "weight_3_lp_oz": 42,
+  "weight_4_lp_oz": 52,
+  "weight_5_lp_oz": 60,
+  "weight_6_lp_oz": 70
 }
 ```
 Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
