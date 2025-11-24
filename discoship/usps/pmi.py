@@ -78,15 +78,10 @@ def _parse_pmi_rate_table(table_soup):
     ths = trs[1].find_all('th')
     # Price Group 1 is labelled "Canada 1", rest are just number
     pgs = [ int(th.text.replace('Canada', '').strip()) for th in ths ]
-    log.debug(f'thead has {len(trs)} rows; 2nd row has {len(ths)} cells')
-
     table_data = { pg:[] for pg in pgs }
-    log.debug(f'cells corr to price groups {pgs}; init table_data {table_data}')
 
     assert tbody.name == 'tbody'
     trs = tbody.find_all('tr')
-    log.debug(f'rate table has {len(trs)} rows')
-
     # 70 rows of 11 cells: [up_to_weight, pg_1_price, ..., pg_10_price]
     i = 0
     for tr in trs:
