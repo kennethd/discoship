@@ -65,7 +65,9 @@ def _parse_fcpis_rate_table(table_soup):
     pgindex = {}
     for i, th in enumerate(thead.find_all('th')):
         # skip col 0 == weight class description
-        if i > 0:
+        if i == 0:
+            assert 'Weight Not Over (oz.)' in th.text
+        else:
             pgindex[i] = th.text
     #print(pgindex)
     # {1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10'}
@@ -116,7 +118,9 @@ def fetch_fcpis_rates_data():
     html = fetch_usps_rate_tables()
     soup = bs4.BeautifulSoup(html, 'html.parser')
     soup = soup.body.find(id='pe-content-document')
+    assert soup is not None, 'Could not locate pe-content-document'
     atag = soup.find(id=f'a_{FCPIS_RATE_TABLE_HEADER_TEXT}')
+    assert atag is not None, f'anchor "a_{FCPIS_RATE_TABLE_HEADER_TEXT}" not found'
     h4tag = atag.parent
     assert h4tag.name == 'h4'
     next_sib = h4tag.next_sibling
@@ -125,12 +129,16 @@ def fetch_fcpis_rates_data():
     rates_data = {}
     while tables_parsed < 2:
         if next_sib.name == 'table':
-            table_data = _parse_fcpis_rate_table(next_sib)
+            try:
+                table_data = _parse_fcpis_rate_table(next_sib)
+            except AssertionError as exc:
+                log.error("Failed to parse fcpis rate table: {exc}")
+                continue
             rates_data.update(table_data)
             tables_parsed += 1
         next_sib = next_sib.next_sibling
         safety += 1
-        if safety >= 24:
+        if safety >= 6:
             raise ValueError('Expected tables not found. Has source HTML changed?')
     log.debug(f'Fetched rate data for price groups: {rates_data}')
     #print(rates_data)

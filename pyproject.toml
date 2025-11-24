@@ -57,6 +57,9 @@ discoship = [
     "data/userdata.db",
 ]
 
+[tool.pytest.ini_options]
+addopts = "--import-mode importlib"
+
 [tool.coverage.report]
 skip_empty = true  # exclude empty __init__.py files from report
 show_missing = true  # include missing lines in coverage report

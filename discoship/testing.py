@@ -29,16 +29,16 @@ def save_bs4_data_fixture(func):
     def _func(soup, *args, **kwargs):
         mod = '.'.join(func.__module__.split('.')[1:])
         path = os.path.sep.join([TESTS_DATA_PATH, f'{mod}.{func.__name__}.htm'])
-        log.info(f"save_bs4_data_fixture called; path={path}")
+        log.debug(f"save_bs4_data_fixture called; path={path}")
         if SAVE_FIXTURE_DATA:
             with open(path, 'w') as fh:
-                fh.write(str(soup))
+                fh.write(str(soup.prettify(formatter="html")))
             log.info(f"created bs4 data fixture @ {path}")
         return func(soup, *args, **kwargs)
     return _func
 
 
-def load_bs4_data_fixture(filename):
+def load_bs4_data_fixture(filename, expect_to_find='div'):
     """load data previously saved by save_bs4_data_fixture()
 
     reads HTML from filename, found in `tests/data` dir, converts back to
@@ -46,8 +46,9 @@ def load_bs4_data_fixture(filename):
     """
     path = os.path.sep.join([TESTS_DATA_PATH, filename])
     with open(path, 'r') as fh:
-        html = fh.read()
-    soup = bs4.BeautifulSoup(html, 'html.parser')
+        soup = bs4.BeautifulSoup(fh, 'html.parser')
+    # re-loading partial html results in soup.name==document
+    soup = soup.find(expect_to_find)
     return soup
 
 
@@ -79,4 +80,20 @@ def save_output_for_caller(func, ext='htm'):
         return result
 
     return _func
+
+
+def load_saved_output(filename):
+    """reads `filename` from `tests/data` & returns contents
+
+    tests can use this to load mock data previously saved by `save_output_for_caller`
+
+    for example `discoship.io.fetch_url` is wrapped by `@save_output_for_caller`
+    causing it to write fetched data to a file named for the calling function:
+    `tests/data/fetch_url-fetch_usps_rate_tables.htm`, which can be loaded
+    from tests to use as return value for mocked function `fetch_usps_rate_tables`
+    """
+    path = os.path.sep.join([TESTS_DATA_PATH, filename])
+    with open(path, 'r') as fh:
+        data = fh.read()
+    return data
 
