@@ -5,7 +5,7 @@ from discoship.testing import load_bs4_data_fixture, load_saved_output
 from discoship.usps import fcpis
 
 
-FCPIS_RATE_TABLE_DATA_PG_1_10 = {
+FCPIS_RATES_PRICE_GROUP_1_10 = {
    '1': ['17.85', '26.00', '38.50', '47.60'],
    '2': ['18.05', '26.60', '39.00', '51.05'],
    '3': ['20.00', '37.35', '56.25', '74.35'],
@@ -18,7 +18,7 @@ FCPIS_RATE_TABLE_DATA_PG_1_10 = {
    '10': ['19.35', '31.15', '50.15', '68.65'],
 }
 
-FCPIS_RATE_TABLE_DATA_PG_11_20 = {
+FCPIS_RATES_PRICE_GROUP_11_20 = {
   '11': ['23.80', '40.45', '55.95', '72.00'],
   '12': ['22.60', '41.25', '65.25', '79.10'],
   '13': ['24.35', '37.40', '56.40', '75.70'],
@@ -31,18 +31,18 @@ FCPIS_RATE_TABLE_DATA_PG_11_20 = {
   '20': ['21.00', '31.95', '49.25', '64.25'],
 }
 
-FCPIS_RATE_TABLE_DATA = FCPIS_RATE_TABLE_DATA_PG_1_10.copy()
-FCPIS_RATE_TABLE_DATA.update(FCPIS_RATE_TABLE_DATA_PG_11_20)
+FCPIS_RATE_TABLE_DATA = FCPIS_RATES_PRICE_GROUP_1_10.copy()
+FCPIS_RATE_TABLE_DATA.update(FCPIS_RATES_PRICE_GROUP_11_20)
 
 
 def test_parse_fcpis_rate_table():
     filename = 'usps.fcpis._parse_fcpis_rate_table.htm'
     table_soup = load_bs4_data_fixture(filename, expect_to_find='table')
     result = fcpis._parse_fcpis_rate_table(table_soup)
-    assert result == FCPIS_RATE_TABLE_DATA_PG_11_20
+    assert result == FCPIS_RATES_PRICE_GROUP_11_20
 
 
-def test_fcpis_rates_data(mocker):
+def test_fetch_fcpis_rates_data(mocker):
     filename = 'fetch_url-fetch_usps_rate_tables.htm'
     html = load_saved_output(filename)
     mocker.patch('discoship.usps.fcpis.fetch_usps_rate_tables', return_value=html)
@@ -51,7 +51,7 @@ def test_fcpis_rates_data(mocker):
     fcpis.fetch_usps_rate_tables.assert_called()
 
 
-def test_fcpis_rates_data_raises_error(mocker):
+def test_fetch_fcpis_rates_data_raises_error(mocker):
     # return html not containing table we're looking for
     filename = 'fetch_url-fetch_iso3166_countries.htm'
     html = load_saved_output(filename)
