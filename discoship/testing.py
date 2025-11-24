@@ -32,7 +32,7 @@ def save_bs4_data_fixture(func):
         log.debug(f"save_bs4_data_fixture called; path={path}")
         if SAVE_FIXTURE_DATA:
             with open(path, 'w') as fh:
-                fh.write(str(soup.prettify(formatter="html")))
+                fh.write(soup)
             log.info(f"created bs4 data fixture @ {path}")
         return func(soup, *args, **kwargs)
     return _func
