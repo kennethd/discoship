@@ -55,6 +55,12 @@ discoship = [
     "data/create-userdata-table.sql",
     "data/discogs-shipping-destinations.htm",
     "data/userdata.db",
+    "tests/data/countries.fetch._parse_iso3166_table_data.htm",
+    "tests/data/fetch_url-fetch_iso3166_countries.htm",
+    "tests/data/fetch_url-fetch_usps_rate_tables.htm",
+    "tests/data/usps.cpg._parse_cpg_data_table.htm",
+    "tests/data/usps.fcpis._parse_fcpis_rate_table.htm",
+    "tests/data/usps.pmi._parse_pmi_rate_table.htm",
 ]
 
 [tool.pytest.ini_options]

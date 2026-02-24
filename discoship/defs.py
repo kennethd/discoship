@@ -23,7 +23,7 @@ DEFAULT_SERVICE = USPS_SVC_FCPIS
 
 PKG_PATH = os.path.dirname(__file__)
 REPO_PATH = os.path.dirname(PKG_PATH)
-TESTS_DATA_PATH = os.path.sep.join([REPO_PATH, 'tests', 'data'])
+TESTS_DATA_PATH = os.path.sep.join([PKG_PATH, 'tests', 'data'])
 
 with open(os.path.sep.join([PKG_PATH, 'VERSION']), 'r') as fh:
     VERSION = fh.read().strip()
