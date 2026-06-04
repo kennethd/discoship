@@ -1,22 +1,8 @@
 #!/bin/bash
-
-RESET="\e[0m"
-BOLD="\e[1m"
-FGGRN="\e[32m"
-FGRED="\e[31m"
-FGYEL="\e[33m"
-
-stderr() { echo -e "$0: $*" >&2; }
-ok() { stderr "${FGGRN}${BOLD}ok:  $*${RESET}"; }
-err() { stderr "${FGRED}${BOLD}err:  $*${RESET}"; }
-info() { stderr "${FGYEL}${BOLD}info: $*${RESET}"; }
-die() { err "$*"; exit 99; }
-try() { "$@" && ok "$@" || die "$*"; }
-
-[ -f "./pyproject.toml" ] || die "Please run ./bin/clean from top-level directory of project"
-PKGNAME=$( awk -F "=" '/name/ {print $2}' pyproject.toml | sed 's/[ '\''"]//g')
-info "detected packagename $PKGNAME"
-try find ./$PKGNAME ./tests -name '*.pyc' -exec rm '{}' \;
-try find ./$PKGNAME ./tests -path '*/__pycache__' -exec rmdir '{}' \+
-try rm -rf "venv-$PKGNAME" ./build ./dist ./$PKGNAME.egg-info
-[[ ! -z "$VIRTUAL_ENV" ]] && err "you have an active venv; don't forget to run 'deactivate'"
+source "$(dirname "$(realpath "$0")")"/functions
+try find ./$PKGNAME -name '*.pyc' -exec rm '{}' \;
+try find ./$PKGNAME -path '*/__pycache__' -exec rmdir '{}' \+
+# deactivate is a function not a script, if it is defined, call it & it will
+# destroy VIRTUAL_ENV env var (and definition of itself)
+type deactivate >/dev/null 2>&1 && deactivate
+try rm -rf "venv-$PKGNAME" ./build ./dist ./$PKGNAME.egg-info ./.pytest_cache

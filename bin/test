@@ -1,0 +1,11 @@
+#!/bin/bash
+source "$(dirname "$(realpath "$0")")"/functions
+# ## bug reporters: please attach the output from this script
+# ## first activate the virtualenv (created when you run ./bin/install):
+# source ./venv-discoship/bin/activate
+# ## use '>' to redirect output to a file:
+# ./bin/test >/tmp/pytest-output.txt
+[[ -z "$VIRTUAL_ENV" ]] && die "you must activate virtualenv first: 'source ./venv-$PKGNAME/activate'"
+echo "$VIRTUAL_ENV" | grep $PKGNAME || die "you might have the wrong virtualenv activated: $VIRTUAL_ENV" 
+which pytest || die pytest not found, you should reinstall. run ./bin/install
+pytest --cov=$PKGNAME --verbose --doctest-modules -p no:cacheprovider --showlocals
