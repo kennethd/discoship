@@ -11,7 +11,7 @@ import os
 
 from discoship.countries.aliases import COUNTRY_ALIASES
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
-from discoship.defs import PKG_PATH
+from discoship.defs import PKG_PATH, SOUP_PARSER
 
 
 log = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ def parse_destinations(source=SHIP_DESTS_PATH):
     with open(source, 'r') as fh:
         html = fh.read()
 
-    soup = bs4.BeautifulSoup(html, 'html.parser')
+    soup = bs4.BeautifulSoup(html, SOUP_PARSER)
     labels = soup.find_all(class_='region-name')
     destinations = []
     for label in labels:

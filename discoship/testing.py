@@ -1,11 +1,14 @@
+import contextlib
 import functools
 import inspect
 import logging
 import os
+import shutil
+import tempfile
 
 import bs4
 
-from discoship.defs import TESTS_DATA_PATH
+from discoship.defs import SOUP_PARSER, TESTS_DATA_PATH
 
 
 # run with global option --save-fixture-data to update tests/data fixtures
@@ -32,7 +35,7 @@ def save_bs4_data_fixture(func):
         log.debug(f"save_bs4_data_fixture called; path={path}")
         if SAVE_FIXTURE_DATA:
             with open(path, 'w') as fh:
-                fh.write(soup)
+                fh.write(str(soup))
             log.info(f"created bs4 data fixture @ {path}")
         return func(soup, *args, **kwargs)
     return _func
@@ -46,8 +49,8 @@ def load_bs4_data_fixture(filename, expect_to_find='div'):
     """
     path = os.path.sep.join([TESTS_DATA_PATH, filename])
     with open(path, 'r') as fh:
-        soup = bs4.BeautifulSoup(fh, 'html.parser')
-    # re-loading partial html results in soup.name==document
+        soup = bs4.BeautifulSoup(fh, SOUP_PARSER)
+    # re-loading partial html results in soup.name=='[document]'
     soup = soup.find(expect_to_find)
     return soup
 
@@ -96,4 +99,21 @@ def load_saved_output(filename):
     with open(path, 'r') as fh:
         data = fh.read()
     return data
+
+
+@contextlib.contextmanager
+def tmpdir(cleanup=True):
+    """contextmanager that creates tmpdir, yields path, and rms dir @finally
+
+    if you're testing a broken test & need the tempdir to remain after the
+    test runs, pass cleanup=False, but never check in code with that parameter
+    """
+    path = tempfile.mkdtemp()
+    log.debug(f"created tmpdir {path}")
+    try:
+        yield path
+    finally:
+        if cleanup:
+            log.debug(f"removing {path}")
+            shutil.rmtree(path)
 

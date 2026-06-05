@@ -81,12 +81,12 @@ CREATE TABLE usps_pmei_rates(
 -- https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
 CREATE TABLE iso3166_countries(
     name VARCHAR NOT NULL PRIMARY KEY,
-    official_name VARCHAR NOT NULL,
+    sovereignty VARCHAR NOT NULL,
     code2 VARCHAR NOT NULL,
     code3 VARCHAR NOT NULL
 );
-CREATE INDEX idx_iso3166_countries_official_name
-          ON iso3166_countries(official_name COLLATE NOCASE);
+CREATE INDEX idx_iso3166_countries_sovereignty
+          ON iso3166_countries(sovereignty COLLATE NOCASE);
 CREATE INDEX idx_iso3166_countries_code2
           ON iso3166_countries(code2 COLLATE NOCASE);
 CREATE INDEX idx_iso3166_countries_code3

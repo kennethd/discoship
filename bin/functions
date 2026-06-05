@@ -6,6 +6,7 @@ FGGRN="\e[32m"
 FGRED="\e[31m"
 FGYEL="\e[33m"
 
+# $0 is all args as array, $* is all args as a single string
 stderr() { echo -e "$0: $*" >&2; }
 ok() { stderr "${FGGRN}${BOLD}ok:  $*${RESET}"; }
 err() { stderr "${FGRED}${BOLD}err:  $*${RESET}"; }

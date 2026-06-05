@@ -4,6 +4,7 @@ import logging
 import re
 
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
+from discoship.defs import SOUP_PARSER
 from discoship.io import fetch_usps_rate_tables
 
 

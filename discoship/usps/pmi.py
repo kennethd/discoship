@@ -5,6 +5,7 @@ import re
 import bs4
 
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
+from discoship.defs import SOUP_PARSER
 from discoship.io import fetch_usps_rate_tables
 from discoship.testing import save_bs4_data_fixture
 
@@ -152,7 +153,7 @@ def fetch_pmi_rates_data():
     pmi_rates = { i:[] for i in range(1, 21) }
 
     html = fetch_usps_rate_tables()
-    soup = bs4.BeautifulSoup(html, 'html.parser')
+    soup = bs4.BeautifulSoup(html, SOUP_PARSER)
     h2 = soup.body.find('h2', string=re.compile(PMI_RATE_TABLE_HEADER_TEXT))
     assert h2.name == 'h2'
     div_c334 = h2.parent.next_sibling.next_sibling.parent.parent

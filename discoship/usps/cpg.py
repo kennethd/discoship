@@ -5,7 +5,7 @@ import bs4
 
 from discoship.countries.aliases import COUNTRY_ALIASES
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
-from discoship.defs import DEFAULT_SERVICE, USPS_SVC_FCPIS, USPS_SVC_PMEI, USPS_SVC_PMI
+from discoship.defs import DEFAULT_SERVICE, SOUP_PARSER, USPS_SVC_FCPIS, USPS_SVC_PMEI, USPS_SVC_PMI
 from discoship.io import fetch_usps_rate_tables
 from discoship.testing import save_bs4_data_fixture
 
@@ -151,7 +151,7 @@ def fetch_cpg_data(service=DEFAULT_SERVICE):
     log.info("fetching CPG data")
     cpg_data = {}
     html = fetch_usps_rate_tables()
-    soup = bs4.BeautifulSoup(html, 'html.parser')
+    soup = bs4.BeautifulSoup(html, SOUP_PARSER)
     h2s = soup.body.find_all('h2', string=re.compile(CPG_HEADER_TEXT))
     log.debug(f'Found {len(h2s)} <h2> elements w/text {CPG_HEADER_TEXT}')
     for h2 in h2s:

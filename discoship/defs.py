@@ -33,3 +33,7 @@ DB_PATH = os.path.sep.join([PKG_PATH, 'data', 'discoship.db'])
 USERDATA_PATH = os.path.sep.join([PKG_PATH, 'data', 'userdata.db'])
 SQL_INGEST_PATH = os.path.sep.join([PKG_PATH, 'data', 'create-ingest-tables.sql'])
 SQL_CONFIG_PATH = os.path.sep.join([PKG_PATH, 'data', 'create-userdata-table.sql'])
+
+# html5lib & lxml insist on creating well-formed docs, adding <html>...</html>
+# we want to write doc fragments, innerHTML style
+SOUP_PARSER = 'html.parser'

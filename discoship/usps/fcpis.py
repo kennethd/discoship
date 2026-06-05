@@ -5,6 +5,7 @@ import re
 import bs4
 
 from discoship.db import USERDATA_PATH, execute, executemany, selectone
+from discoship.defs import SOUP_PARSER
 from discoship.io import fetch_usps_rate_tables
 from discoship.testing import save_bs4_data_fixture
 
@@ -116,7 +117,7 @@ def fetch_fcpis_rates_data():
     """
     log.info('fetching FCPIS rates data')
     html = fetch_usps_rate_tables()
-    soup = bs4.BeautifulSoup(html, 'html.parser')
+    soup = bs4.BeautifulSoup(html, SOUP_PARSER)
     soup = soup.body.find(id='pe-content-document')
     assert soup is not None, 'Could not locate pe-content-document'
     atag = soup.find(id=f'a_{FCPIS_RATE_TABLE_HEADER_TEXT}')
