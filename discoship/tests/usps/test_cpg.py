@@ -57,11 +57,11 @@ def test_fetch_cpg_data(mocker):
     cpg.fetch_usps_rate_tables.assert_called()
 
 
-def test_ingest_cpg_data(mocker):
+def test_insert_cpg_data(mocker):
     mocker.patch('discoship.usps.cpg.executemany', return_value=1)
     mocker.patch('discoship.usps.cpg.execute', return_value=1)
     mocker.patch('discoship.usps.cpg.selectone')
-    cpg.ingest_cpg_data(COUNTRY_PRICE_GROUPS, service=USPS_SVC_PMI)
+    cpg.insert_cpg_data(COUNTRY_PRICE_GROUPS, service=USPS_SVC_PMI)
     insert_vals = [ tuple([ctry, USPS_SVC_PMI] + list(v)) for ctry, v in COUNTRY_PRICE_GROUPS.items() ]
     cpg.executemany.assert_called_with(cpg.INSERT_USPS_CPG, insert_vals)
     cpg.execute.assert_called_with(cpg.UPDATE_LAST_INGEST_DATE, db=cpg.USERDATA_PATH)

@@ -52,11 +52,11 @@ def test_fetch_pmi_rates_data(mocker):
     pmi.fetch_usps_rate_tables.assert_called()
 
 
-def test_ingest_pmi_rates_data(mocker):
+def test_insert_pmi_rates_data(mocker):
     mocker.patch('discoship.usps.pmi.executemany', return_value=1)
     mocker.patch('discoship.usps.pmi.execute', return_value=1)
     mocker.patch('discoship.usps.pmi.selectone')
-    pmi.ingest_pmi_rates_data(PMI_RATE_TABLE_DATA)
+    pmi.insert_pmi_rates_data(PMI_RATE_TABLE_DATA)
     insert_vals = [ tuple([k] + v) for k, v in PMI_RATE_TABLE_DATA.items() ]
     pmi.executemany.assert_called_with(pmi.INSERT_USPS_PMI_RATES, insert_vals)
     pmi.execute.assert_called_with(pmi.UPDATE_LAST_INGEST_DATE, db=pmi.USERDATA_PATH)

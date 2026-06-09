@@ -62,12 +62,12 @@ def test_fetch_fcpis_rates_data_raises_error(mocker):
     fcpis.fetch_usps_rate_tables.assert_called()
 
 
-def test_ingest_fcpis_rates_data(mocker):
+def test_insert_fcpis_rates_data(mocker):
     mocker.patch('discoship.usps.fcpis.executemany', return_value=1)
     mocker.patch('discoship.usps.fcpis.execute', return_value=1)
     mocker.patch('discoship.usps.fcpis.selectone')
-    fcpis.ingest_fcpis_rates_data(FCPIS_RATE_TABLE_DATA)
-    insert_vals = [ (k, v[0], v[1], v[2], v[3]) for k, v in FCPIS_RATE_TABLE_DATA.items() ]
+    fcpis.insert_fcpis_rates_data(FCPIS_RATE_TABLE_DATA)
+    insert_vals = [ (k, v[0], v[1], v[2], v[3], v[4]) for k, v in FCPIS_RATE_TABLE_DATA.items() ]
     fcpis.executemany.assert_called_with(fcpis.INSERT_USPS_FCPIS_RATES, insert_vals)
     fcpis.execute.assert_called_with(fcpis.UPDATE_LAST_INGEST_DATE, db=fcpis.USERDATA_PATH)
     fcpis.selectone.assert_called_with(fcpis.SELECT_LAST_INGEST_DATE, db=fcpis.USERDATA_PATH)
