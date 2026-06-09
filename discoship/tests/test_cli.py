@@ -115,19 +115,19 @@ def test_ingest_countries_options(mocker):
 
 
 def test_config_dump(mocker):
-    mocker.patch('discoship.cli.dump_config')
+    mocker.patch('discoship.cli.select_config')
     expect = Namespace(info=False, debug=False, save_fixture_data=False,
                        action='config', dump=True, reset=False, set=None)
     cmd = ['config', '--dump']
     args = cli.DiscoShipArgParser.parse_args(cmd)
     assert args == expect
     cli.delegate_args(args)
-    cli.dump_config.assert_called()
+    cli.select_config.assert_called()
 
 
 def test_config_set(mocker):
     mocker.patch('discoship.cli.set_config')
-    mocker.patch('discoship.cli.dump_config')
+    mocker.patch('discoship.cli.select_config')
     expect = Namespace(info=False, debug=False, save_fixture_data=False,
                        action='config', dump=False, reset=False,
                        set=['var-name', 'New Value'])
@@ -136,12 +136,12 @@ def test_config_set(mocker):
     assert args == expect
     cli.delegate_args(args)
     cli.set_config.assert_called()
-    cli.dump_config.assert_called()
+    cli.select_config.assert_called()
 
 
 def test_reset_config(mocker):
     mocker.patch('discoship.cli.reset_config')
-    mocker.patch('discoship.cli.dump_config')
+    mocker.patch('discoship.cli.select_config')
     expect = Namespace(info=False, debug=False, save_fixture_data=False,
                        action='config', dump=False, reset=True, set=None)
     cmd = ['config', '--reset']
@@ -149,7 +149,7 @@ def test_reset_config(mocker):
     assert args == expect
     cli.delegate_args(args)
     cli.reset_config.assert_called()
-    cli.dump_config.assert_called()
+    cli.select_config.assert_called()
 
 
 def test_list_countries(mocker):

@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from discoship.db import select
+from discoship.db import select, selectone, select_config
 from discoship.defs import DEFAULT_SERVICE, USPS_SVC_FCPIS, USPS_SVC_PMI, USPS_SVC_PMEI
 
 
@@ -70,10 +70,10 @@ def select_shipping_query(service=DEFAULT_SERVICE, country=None, price_group=Non
         raise ValueError(f"Unrecognized service: {service}")
     col_list = ", ".join(cols)
     sql_parts = [f"SELECT {col_list} FROM ship_countries WHERE usps_svc_code = ?"]
-    params.append(service)
+    params.append(service.upper())
     if country:
-        sql_parts.append("AND ( cc2 = ? OR country_name = ? OR cc2 = ?)")
-        params.extend([country, country, country])
+        sql_parts.append("AND ( cc2 = ? OR country_name = ? OR cc3 = ?)")
+        params.extend([country.upper(), country.capitalize(), country.upper()])
     if price_group:
         sql_parts.append("AND usps_price_group = ?")
         params.append(price_group)
@@ -83,11 +83,62 @@ def select_shipping_query(service=DEFAULT_SERVICE, country=None, price_group=Non
     return (sql_stmt, params)
 
 
-def write_policies_to_md():
-    pass
+
+# {'country_name': 'India', 'cc2': 'IN', 'cc3': 'IND',
+#  'usps_svc_name': "First-Class Package Int'l", 'usps_svc_code': 'FCPIS',
+#  'usps_price_group': 10,
+#  'svc_max_weight_oz': 64, 'svc_max_value': 400.0,
+#  'rate_1lp': 34.8, 'rate_2lp': 50.15, 'rate_3lp': 50.15, 'rate_4lp': 68.65, 'rate_5lp': 68.65,
+#  'max_weight_lbs': 'N/A', 'flat_rate_price_group': 'N/A'}
+POLICY_TMPL_FCPIS = """
+
+    USPS First Class Package Int'l (FCPIS)
+    FCPIS Price Group: {price_group}
+    Rates last updated: {rates_last_updated} (UTC)
+    Countries: {countries}
+
+    There are two rates to choose from for FCPIS, registered or not:
+
+    NOT Registered:
+
+    Qty LPs:                       1 LP    2-3 LPs*    4-5 LPs
+    -------------------------+----------+----------+----------+
+    Base Shipping            | {rate_1:8.2f} | {rate_2_3:8.2f} | {rate_4_5:8.2f} |
+    -------------------------+----------+----------+----------+
+    Packaging/Materials Fee  | {mats:8.2f} | {mats:8.2f} | {mats:8.2f} |
+    -------------------------+----------+----------+----------+
+    Certificate of Mailing   | {cert:8.2f} | {cert:8.2f} | {cert:8.2f} |
+    -------------------------+----------+----------+----------+
+    TOTAL                    | {total_1:8.2f} | {total_2_3:8.2f} | {total_4_5:8.2f} |
+    -------------------------+----------+----------+----------+
+
+    REGISTERED
+
+    Qty LPs:                       1 LP    2-3 LPs*    4-5 LPs
+    -------------------------+----------+----------+----------+
+    Base Shipping            | {rate_1:8.2f} | {rate_2_3:8.2f} | {rate_4_5:8.2f} |
+    -------------------------+----------+----------+----------+
+    Packaging/Materials Fee  | {mats:8.2f} | {mats:8.2f} | {mats:8.2f} |
+    -------------------------+----------+----------+----------+
+    Registered**             | {reg:8.2f} | {reg:8.2f} | {reg:8.2f} |
+    -------------------------+----------+----------+----------+
+    TOTAL                    | {regtotal_1:8.2f} | {regtotal_2_3:8.2f} | {regtotal_4_5:8.2f} |
+    -------------------------+----------+----------+----------+
+
+    *  Weights for 2 * 1LPs packed up vary, but are very close to
+       price group boundary of 32oz (and double-LPs even more so),
+       if you are ordering 2LPs it is probably worth it to reach out
+       to me and ask me to pack up your order & edit real shipping
+       cost before paying for your order, could save you ~$24
+
+    ** International Registered Mail means different things for
+       different countries, see
+       https://www.usps.com/international/insurance-extra-services.htm
+
+"""
 
 
-def _format_fcpis_policy(policy_rates):
+def _format_fcpis_policy(policy_rates, config):
     """formats policy_rates into human-readable string something like:
 
     USPS First Class Package Int'l (FCPIS)
@@ -126,13 +177,52 @@ def _format_fcpis_policy(policy_rates):
        price group boundary of 32oz (and double-LPs even more so),
        if you are ordering 2LPs it is probably worth it to reach out
        to me and ask me to pack up your order & edit real shipping
-       cost before paying for your order, could save you ~$24
+       cost before paying for your order, could save you ~$15-25
+       depending on your country
 
     ** International Registered Mail means different things for
        different countries, see
        https://www.usps.com/international/insurance-extra-services.htm
 
+    """
+    # config vals:
+    #  'packing_handling_fee': 1.5,
+    #  'usps_fcpis_cert_mailing_fee': 2.5,  * not if registered
+    #  'usps_fcpis_registered_fee': 22.0,
+    #  'last_ingest_usps_fcpis_rates': '2026-06-09 08:10:35',
+    #  'weight_1_lp_oz': 20, 'weight_2_lp_oz': 34, 'weight_3_lp_oz': 42, 'weight_4_lp_oz': 52, 'weight_5_lp_oz': 60
 
+    # policy_rates looks something like:
+    # {'country_name': 'Australia', 'cc2': 'AU', 'cc3': 'AUS',
+    #  'usps_svc_code': 'FCPIS', 'usps_price_group': 12, 'usps_svc_name': "First-Class Package Int'l",
+    #  'svc_max_weight_oz': 64, 'svc_max_value': 400.0,
+    #  'rate_1lp': 41.25, 'rate_2lp': 65.25, 'rate_3lp': 65.25, 'rate_4lp': 79.1, 'rate_5lp': 79.1,
+    # 'max_weight_lbs': 'N/A', 'flat_rate_price_group': 'N/A'}
+
+    tmpl_vars = {
+        'rates_last_updated': config['last_ingest_usps_fcpis_rates'],
+        'price_group': policy_rates['usps_price_group'],
+        'countries': policy_rates['country_name'],
+        'rate_1': policy_rates['rate_1lp'],
+        'rate_2_3': policy_rates['rate_2lp'],
+        'rate_4_5': policy_rates['rate_4lp'],
+        'mats': config['packing_handling_fee'],
+        'cert': config['usps_fcpis_cert_mailing_fee'],
+        'total_1': policy_rates['rate_1lp'] + config['packing_handling_fee'] + config['usps_fcpis_cert_mailing_fee'],
+        'total_2_3': policy_rates['rate_2lp'] + config['packing_handling_fee'] + config['usps_fcpis_cert_mailing_fee'],
+        'total_4_5': policy_rates['rate_4lp'] + config['packing_handling_fee'] + config['usps_fcpis_cert_mailing_fee'],
+        'reg': config['usps_fcpis_registered_fee'],
+        'regtotal_1': policy_rates['rate_1lp'] + config['packing_handling_fee'] + config['usps_fcpis_registered_fee'],
+        'regtotal_2_3': policy_rates['rate_2lp'] + config['packing_handling_fee'] + config['usps_fcpis_registered_fee'],
+        'regtotal_4_5': policy_rates['rate_4lp'] + config['packing_handling_fee'] + config['usps_fcpis_registered_fee'],
+    }
+
+    return POLICY_TMPL_FCPIS.format(**tmpl_vars)
+
+
+
+def _format_pmi_policy(policy_rates):
+    """
     Beyond 4LBs USPS only ships International via PMI service:
 
     USPS Priority Mail Int'l (PMI)
@@ -175,19 +265,8 @@ def _format_fcpis_policy(policy_rates):
 'rate_10lp': 133.5, 'rate_11lp': 142, 'rate_12lp': 150.45, 'rate_13lp':
 150.45, 'rate_14lp': 158.9, 'rate_15lp': 158.9, 'rate_16lp': 158.9,
 'max_weight_lbs': 66, 'flat_rate_price_group': 6}
-
     """
-    # collect fees from config table:
-    #  'packing_handling_fee': 1.5,
-    #  'usps_fcpis_cert_mailing_fee': 2.5,  * not if registered
-    #  'usps_fcpis_registered_fee': 22.0,
-    config = select("SELECT * FROM config")
-    # policy rates looks something like:
-    # {'country_name': 'Australia', 'cc2': 'AU', 'cc3': 'AUS',
-    #  'usps_svc_code': 'FCPIS', 'usps_price_group': 12, 'usps_svc_name': "First-Class Package Int'l",
-    #  'svc_max_weight_oz': 64, 'svc_max_value': 400.0,
-    #  'rate_1lp': 41.25, 'rate_2lp': 65.25, 'rate_3lp': 65.25, 'rate_4lp': 79.1, 'rate_5lp': 79.1,
-    # 'max_weight_lbs': 'N/A', 'flat_rate_price_group': 'N/A'}
+    pass
 
 
 def print_policy(policy, service=DEFAULT_SERVICE, file=sys.stdout):
@@ -196,10 +275,13 @@ def print_policy(policy, service=DEFAULT_SERVICE, file=sys.stdout):
 
 def create_policy(service=DEFAULT_SERVICE, country=None, price_code=None):
     sql_stmt, params = select_shipping_query(service, country, price_code)
-    rows = select(sql_stmt, params)
-    log.debug(f"create_policy({service}, {country}, {price_code}): found {len(rows)} rows")
-    for row in rows:
-        print(dict(row))
+    service_rates = selectone(sql_stmt, params)
+    print(dict(service_rates))
+    log.debug(f"create_policy({service}, {country}, {price_code}): found {len(service_rates)} rows")
+    config = select_config()
+    print(config)
+    fcpis_policy = _format_fcpis_policy(service_rates, config)
+    print(fcpis_policy)
 
 
 def create_all_policies():

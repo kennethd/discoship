@@ -190,7 +190,7 @@ def reset_config():
     executefile(SQL_CONFIG_PATH, db=USERDATA_PATH)
 
 
-def dump_config():
+def select_config():
     """selects everything from config table for backup/display"""
     rows = select("SELECT * FROM userdata", db=USERDATA_PATH)
     config = { row[0]: row[1] for row in rows }

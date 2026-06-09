@@ -5,7 +5,7 @@ from pprint import pprint
 import sys
 
 from discoship.countries.fetch import fetch as fetch_countries_data
-from discoship.db import dbinit, dump_config, set_config, reset_config, \
+from discoship.db import dbinit, select_config, set_config, reset_config, \
                          recreate_ingest_tables
 from discoship.defs import DEFAULT_PROVIDER, DEFAULT_SERVICE, USPS_SERVICES, VERSION
 from discoship.discogs.fetch import fetch as fetch_discogs_data
@@ -106,17 +106,17 @@ def delegate_args(args):
     if args.action == 'config':
         if args.reset:
             print("For reference, this was your config before reset:", file=sys.stderr)
-            pprint(dump_config(), stream=sys.stderr)
+            pprint(select_config(), stream=sys.stderr)
             reset_config()
             print("\nNew config:", file=sys.stderr)
-            pprint(dump_config(), stream=sys.stderr)
+            pprint(select_config(), stream=sys.stderr)
         elif args.set:
             rowcount = set_config(args.set[0], args.set[1])
             print("\nNew config:", file=sys.stderr)
-            pprint(dump_config(), stream=sys.stderr)
+            pprint(select_config(), stream=sys.stderr)
         elif args.dump:
             # always STDOUT when it is output asked for; STDERR when extra info
-            pprint(dump_config(), stream=sys.stdout)
+            pprint(select_config(), stream=sys.stdout)
 
     elif args.action == 'init':
         if args.db:
