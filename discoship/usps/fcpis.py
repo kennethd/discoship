@@ -19,14 +19,16 @@ INSERT_USPS_FCPIS_RATES = """
   INSERT INTO usps_fcpis_rates (
     price_group,
     weight_to_8oz,
+    weight_to_16oz,
     weight_to_32oz,
     weight_to_48oz,
     weight_to_64oz
   )
-  VALUES (?, ?, ?, ?, ?)
+  VALUES (?, ?, ?, ?, ?, ?)
   ON CONFLICT (price_group)
   DO UPDATE SET
     weight_to_8oz = excluded.weight_to_8oz,
+    weight_to_16oz = excluded.weight_to_16oz,
     weight_to_32oz = excluded.weight_to_32oz,
     weight_to_48oz = excluded.weight_to_48oz,
     weight_to_64oz = excluded.weight_to_64oz
@@ -108,12 +110,12 @@ def fetch_fcpis_rates_data():
     USPS maintains 20 Price Groups for international shipping, each country
     is a member of 1 group (see cpg.py & usps_cpg table in db)
 
-    Rates are determined by Price Group and Weight.  There are 4 weight
-    classes: up to 8oz, 32oz, 48oz, and 64oz.  FCPIS packages cannot weigh
+    Rates are determined by Price Group and Weight.  There are 5 weight
+    classes: up to 8oz, 16oz, 32oz, 48oz, and 64oz.  FCPIS packages cannot weigh
     more than 64oz (4lbs).
 
-    returns dict {price_group: [rate, rate, rate, rate]} where for each price_group
-    rates are returned for 4 increasing weight classes (8oz, 32oz, 48oz, 64oz)
+    returns dict {price_group: [rate, rate, rate, rate, rate]} where for each price_group
+    rates are returned for 5 increasing weight classes (8oz, 16oz, 32oz, 48oz, 64oz)
     """
     log.info('fetching FCPIS rates data')
     html = fetch_usps_rate_tables()
@@ -146,7 +148,7 @@ def fetch_fcpis_rates_data():
     return rates_data
 
 
-def ingest_fcpis_rates_data(rates_data):
+def insert_fcpis_rates_data(rates_data):
     """insert fetched rates_data into usps_fcpis_rates table
 
     exposed by cli via `ingest` subcommand:
@@ -158,20 +160,20 @@ def ingest_fcpis_rates_data(rates_data):
     $ sqlite3 discoship/data/discoship.db "SELECT COUNT(*) FROM usps_fcpis_rates;"
     20
     $ sqlite3 discoship/data/discoship.db ".headers on" ".mode column" "select * from usps_fcpis_rates limit 3;"
-    price_group  weight_to_8oz   weight_to_32oz  weight_to_48oz  weight_to_64oz
-    -----------  --------------  --------------  --------------  --------------
-    1            17.85           26              38.5            47.6
-    2            18.05           26.6            39              51.05
-    3            20              37.35           56.25           74.35
+    price_group  weight_to_8oz  weight_to_16oz  weight_to_32oz  weight_to_48oz  weight_to_64oz
+    -----------  -------------  --------------  --------------  --------------  --------------
+    1            19.4           26              29.05           38.5            47.6
+    2            20.15          26.6            29.7            39              51.05
+    3            22.65          37.35           41.7            61.7            74.35
     """
-    log.info('ingesting fcpis rates data')
+    log.info('insert fcpis rates data')
     log.debug(rates_data)
     # incoming rates_data is formatted as dict {price_group: [rates]}:
-    # {'1': ['17.85', '26.00', '38.50', '47.60'], ...}
-    vals = [ (k, v[0], v[1], v[2], v[3]) for k, v in rates_data.items() ]
+    # {'1': ['17.85', '22.00', '26.00', '38.50', '47.60'], ...}
+    vals = [ (k, v[0], v[1], v[2], v[3], v[4]) for k, v in rates_data.items() ]
     #print(vals)
     rowcount = executemany(INSERT_USPS_FCPIS_RATES, vals)
-    log.info(f'ingest_fcpis_rates_data: updated {rowcount} rows')
+    log.info(f'insert_fcpis_rates_data: updated {rowcount} rows')
     rowcount = execute(UPDATE_LAST_INGEST_DATE, db=USERDATA_PATH)
     assert rowcount == 1
     row = selectone(SELECT_LAST_INGEST_DATE, db=USERDATA_PATH)

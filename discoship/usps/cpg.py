@@ -167,7 +167,7 @@ def fetch_cpg_data(service=DEFAULT_SERVICE):
     return cpg_data
 
 
-def ingest_cpg_data(cpg_data, service=DEFAULT_SERVICE):
+def insert_cpg_data(cpg_data, service=DEFAULT_SERVICE):
     """insert fetched cpg_data into usps_cpg table
 
     exposed by cli via `ingest` subcommand:
@@ -185,7 +185,7 @@ def ingest_cpg_data(cpg_data, service=DEFAULT_SERVICE):
     Albania              FCPIS              3
     Algeria              FCPIS              5
     ```"""
-    log.info(f'ingest_cpg_data: service={service}')
+    log.info(f'insert_cpg_data: service={service}')
     log.debug(cpg_data)
     # incoming cpg_data is formatted as:
     # {'Afghanistan': ('4', None, None), 'Albania': ('3', None, None), ...}
@@ -195,7 +195,7 @@ def ingest_cpg_data(cpg_data, service=DEFAULT_SERVICE):
     vals = [ tuple([country, service] + list(v)) for country, v in cpg_data.items() ]
     #print(vals)
     rowcount = executemany(INSERT_USPS_CPG, vals)
-    log.info(f'ingest_cpg_data: updated {rowcount} rows')
+    log.info(f'insert_cpg_data: updated {rowcount} rows')
     rowcount = execute(UPDATE_LAST_INGEST_DATE, db=USERDATA_PATH)
     assert rowcount == 1
     row = selectone(SELECT_LAST_INGEST_DATE, db=USERDATA_PATH)

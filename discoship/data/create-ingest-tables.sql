@@ -37,6 +37,8 @@ CREATE TABLE usps_fcpis_rates(
     price_group INTEGER NOT NULL PRIMARY KEY,
     -- packing material alone is ~6oz
     weight_to_8oz INTEGER NOT NULL,  -- ship cost up to 8oz
+    -- probably a 7" maybe a single CD would weigh < 16oz
+    weight_to_16oz INTEGER NOT NULL,  -- ship cost up to 16oz
     -- one LP boxed up is ~18-20oz
     -- one 2xLP is ~22-24oz
     weight_to_32oz INTEGER NOT NULL,  -- 2 LPs ~28-32oz

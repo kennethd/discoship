@@ -176,7 +176,7 @@ def fetch_pmi_rates_data():
     return pmi_rates
 
 
-def ingest_pmi_rates_data(pmi_rates_data):
+def insert_pmi_rates_data(pmi_rates_data):
     """insert fetched `pmi_rates_data` into `usps_pmi_rates` table
 
     exposed by cli via `ingest` subcommand:
@@ -184,13 +184,13 @@ def ingest_pmi_rates_data(pmi_rates_data):
     $ discoship ingest usps --rates --pmi
     ```
     """
-    log.info('ingesting pmi rates data')
+    log.info('insert pmi rates data')
     log.debug(pmi_rates_data)
     # incoming rates_data is formatted as dict {price_group: [rates]}:
     # {'1': ['17.85', '26.00', '38.50', '47.60'], ...}
     vals = [ tuple([k] + v) for k, v in pmi_rates_data.items() ]
     rowcount = executemany(INSERT_USPS_PMI_RATES, vals)
-    log.info(f'ingest_pmi_rates_data: updated {rowcount} rows')
+    log.info(f'insert_pmi_rates_data: updated {rowcount} rows')
     rowcount = execute(UPDATE_LAST_INGEST_DATE, db=USERDATA_PATH)
     assert rowcount == 1
     row = selectone(SELECT_LAST_INGEST_DATE, db=USERDATA_PATH)

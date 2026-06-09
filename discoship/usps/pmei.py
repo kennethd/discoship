@@ -57,7 +57,7 @@ def fetch_pmei_rates_data():
     pass
 
 
-def ingest_pmei_rates_data(pmei_rates_data):
+def insert_pmei_rates_data(pmei_rates_data):
     pass
 
 
