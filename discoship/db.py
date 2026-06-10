@@ -172,36 +172,36 @@ def dbinit():
     executefile(SQL_INGEST_PATH, db=DB_PATH)
 
 
-def recreate_ingest_tables():
+def recreate_ingest_tables(db=DB_PATH):
     """drops and recreates tables for data ingested from external sources
 
     ALL INGEST SCRIPTS WILL NEED TO BE RE-RUN
 
     Does not destroy user-modified data"""
-    executefile(SQL_INGEST_PATH, db=DB_PATH)
+    executefile(SQL_INGEST_PATH, db=db)
 
 
-def reset_config():
+def reset_config(db=USERDATA_PATH):
     """drops & recreates config table
 
     ALL USER DEFINED CONFIGS WILL BE LOST
 
     Consider backing up your config first"""
-    executefile(SQL_CONFIG_PATH, db=USERDATA_PATH)
+    executefile(SQL_CONFIG_PATH, db=db)
 
 
-def select_config():
+def select_config(db=USERDATA_PATH):
     """selects everything from config table for backup/display"""
-    rows = select("SELECT * FROM userdata", db=USERDATA_PATH)
+    rows = select("SELECT * FROM userdata", db=db)
     config = { row[0]: row[1] for row in rows }
     return config
 
 
-def set_config(key, value):
+def set_config(key, value, db=USERDATA_PATH):
     """Update config value in `userdata` table"""
-    params = (value.strip(), key.strip())
-    rowcount = execute("UPDATE userdata SET value = ? WHERE name = ?", params,
-                       db=USERDATA_PATH)
+    params = (value, key.strip())
+    query = "UPDATE userdata SET value = ? WHERE name = ?"
+    rowcount = execute(query, params, db=db)
     log.info(f"set_config: updated {rowcount} rows")
     return rowcount
 
