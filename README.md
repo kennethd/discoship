@@ -155,16 +155,21 @@ Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
 
 ### 2026-06-09: version 1.1.0
 <dl>
-  <dt>Updated FCPIS rates ingestor to accomodate new 8-16 oz weight class</dt>
   <dt>FCPIS policy generator updated</dt>
-  <dt>Added `./bin/test` script (preferred `pytest` args were getting kind of long)</dt>
-  <dt>Increased test coverage to 82%</dt>
+  <dd>Updated FCPIS rates ingestor to accomodate new 8-16 oz weight class</dd>
+
+  <dt>Added `./bin/test` script</dt>
+  <dd>preferred `pytest` args were getting kind of long</dd>
+
+  <dt>Increased test coverage to 85%</dt>
+  <dd>`db.py` test coverage is now at 95%</dd>
 </dl>
 
 ### 2025-11-23: version 1.0.0
 <dl>
   <dt>Moved `config` table to new `userdata.db`</dt>
   <dd>re-ingested usps rate data can be committed independently of user config</dd>
+
   <dt>Added `init --all`</dt>
   <dd>Now all the pieces work independently, add convenient post-install "do everything" flag</dt>
 </dl>
@@ -183,4 +188,7 @@ Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
 I usually only operate my store when between programming gigs; if the
 [store](https://www.discogs.com/seller/kennethd/profile) is open, please buy a
 record!  And if you like the code, and have a Python gig, reach out & hire me!
+
+If you are a `discogs` hiring manager for the dev team, I do not currently
+live in a state you hire in, but I might be open to changing that
 
