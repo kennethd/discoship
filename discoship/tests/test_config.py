@@ -3,7 +3,6 @@ import os
 import pytest
 
 from discoship import db
-
 from discoship.defs import SQL_CONFIG_PATH
 from discoship.testing import tmpdir
 
