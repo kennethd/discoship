@@ -62,7 +62,7 @@ The other/non-registered *FCPIS* rate generated includes a small fee for a
 "Certificate of Mailing", which is a scammy sort of extra receipt service USPS
 provides for senders to absolve them of accusations of not sending the
 package at all in the case of it becoming "lost in the mail".  It's a small
-enough fee ($1.50 at time of writing) that as sender, I feel it to be worth it.
+enough fee ($2.50 at time of writing) that as sender, I feel it to be worth it.
 
 ### USPS Priority Mail Internationsl
 
@@ -73,9 +73,6 @@ enough fee ($1.50 at time of writing) that as sender, I feel it to be worth it.
 Originally, I expected to be able to create & manage shipping policies via the
 [Discogs API](https://www.discogs.com/developers/).  Unfortunately that
 functionality is not exposed; maybe it's for the best, it could cause a lot of headaches.
-
-Given the limitations, then, there is not much reason to run `discoship` locally,
-provided the published rate tables are up to date, but if you want to do it:
 
 ### Dependencies
 The only dependency is [Python3](https://www.python.org/downloads/), and `bash`
@@ -93,14 +90,11 @@ $ which discoship
 ```
 The last command should output something similar to `/home/kenneth/git/discoship/venv-discoship/bin/discoship`
 
-The install script will have installed some dev tools; to run the unit tests, use `pytest`:
+The install script will have installed some dev tools for testing, with the
+virtualenv activated run:
 ```sh
-$ pytest --cov=discoship --verbose --showlocals
+./bin/test
 ```
-
-The `install` script just creates a virtualenv & installs `discoship` and
-dependencies into it, if you are on a system without `bash`, just follow along
-with the script from the line that looks something like `python3 -m venv ./venv-discoship`
 
 ### Ingest
 You can now ingest all required data from USPS & populate discogs "ship-to
@@ -119,7 +113,11 @@ rate change info can be re-ingested specifically:
 ```sh
 $ discoship --info ingest usps --all
 ```
-You probably want to do that on a branch so a PR can be created to merge it upstream.
+
+To check when the rates were last updated, do:
+```sh
+discoship config --dump | grep last_ingest
+```
 
 ### Generate policies
 
@@ -154,6 +152,14 @@ Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
     config option to compensate for fees on high int'l shipping costs
 
 ## CHANGELOG
+
+### 2026-06-09: version 1.1.0
+<dl>
+  <dt>Updated FCPIS rates ingestor to accomodate new 8-16 oz weight class</dt>
+  <dt>FCPIS policy generator updated</dt>
+  <dt>Added `./bin/test` script (preferred `pytest` args were getting kind of long)</dt>
+  <dt>Increased test coverage to 82%</dt>
+</dl>
 
 ### 2025-11-23: version 1.0.0
 <dl>
