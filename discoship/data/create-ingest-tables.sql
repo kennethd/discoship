@@ -82,17 +82,14 @@ CREATE TABLE usps_pmei_rates(
 
 -- https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
 CREATE TABLE iso3166_countries(
-    name VARCHAR NOT NULL PRIMARY KEY,
-    sovereignty VARCHAR NOT NULL,
-    code2 VARCHAR NOT NULL,
-    code3 VARCHAR NOT NULL
+    name VARCHAR NOT NULL PRIMARY KEY COLLATE NOCASE,
+    sovereignty VARCHAR NOT NULL COLLATE NOCASE,
+    code2 VARCHAR NOT NULL COLLATE NOCASE,
+    code3 VARCHAR NOT NULL COLLATE NOCASE
 );
-CREATE INDEX idx_iso3166_countries_sovereignty
-          ON iso3166_countries(sovereignty COLLATE NOCASE);
-CREATE INDEX idx_iso3166_countries_code2
-          ON iso3166_countries(code2 COLLATE NOCASE);
-CREATE INDEX idx_iso3166_countries_code3
-          ON iso3166_countries(code3 COLLATE NOCASE);
+CREATE INDEX idx_iso3166_countries_sovereignty ON iso3166_countries(sovereignty);
+CREATE INDEX idx_iso3166_countries_code2 ON iso3166_countries(code2);
+CREATE INDEX idx_iso3166_countries_code3 ON iso3166_countries(code3);
 
 
 -- the list of countries in the shipping policy editor
@@ -156,9 +153,7 @@ INNER JOIN discogs_destination_countries AS discogs
 
 -- initial inserts
 
-INSERT INTO usps_service
-("code", "name", "max_weight_oz", "max_value")
-VALUES
+INSERT INTO usps_service ("code", "name", "max_weight_oz", "max_value") VALUES
 ("FCPIS", "First-Class Package Int'l", 64, 400.00),
 -- PMI comes in 2 flavors: flat-rate or by-weight
 -- https://pe.usps.com/text/dmm300/Notice123.htm#_c334
