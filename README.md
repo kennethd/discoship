@@ -176,8 +176,8 @@ first asterisk, 2xLPs boxed up weighs very close to the 32oz border between
 the actual weight.
 
 Packing materials, certificate of mailing, and registered fees are all
-configurable via the `discoship config` subcommand.  $1.50 is on the low side
-even for the dead basic boxes I buy -- if you buy fancy ones, you might want to
+configurable via the `discoship config` subcommand.  $1.50 is about right
+for the dead basic boxes I buy -- if you buy fancy ones, you might want to
 up that.  Certificate of mailing always seems like a scammy sort of receipt
 from USPS, but as a seller I feel better buying one, you can set it to $0 in
 the config if you don't use them.
