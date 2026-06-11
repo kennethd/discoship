@@ -58,25 +58,62 @@ SVC_SELECT_LIST = {
 }
 
 
+def countries_for_price_group(price_group, service=DEFAULT_SERVICE):
+    """returns list of country names for (price_group, service)
+
+    USPS price groups are not the same across services:
+
+    India                             IN      IND     10           FCPIS
+    India                             IN      IND     6            PMI
+    Indonesia                         ID      IDN     4            FCPIS
+    Indonesia                         ID      IDN     6            PMI
+    """
+    countries = []
+    query = " ".join([
+        "SELECT country_name FROM ship_countries",
+        "WHERE usps_svc_code = ?",
+        "AND usps_price_group = ?",
+        "ORDER BY country_name",
+    ])
+    params = (service, price_group)
+    rows = select(query, params)
+    for row in rows:
+        countries.append(row["country_name"])
+    return countries
+
+
 def select_shipping_query(service=DEFAULT_SERVICE, country=None, price_group=None):
     """returns SQL statement for policy rate table, and tuple of params
 
     May raise `ValueError` if `service` is unrecognized
 
     returns (sql_stmt, params)"""
+    # it's unlikely somebody would specify both country & price_group, but
+    # just in case, make sure it makes sense
+    if country and price_group:
+        pg_countries = countries_for_price_group(price_group, service=service)
+        country_name = country_name_from_code(country)
+        if country_name not in pg_countries:
+            msg = f"{country} ({country_name}) not in {service} price group {price_group}"
+            raise ValueError(msg)
+
     params = []
     cols = SVC_SELECT_LIST.get(service.upper())
     if not cols:
         raise ValueError(f"Unrecognized service: {service}")
+
     col_list = ", ".join(cols)
     sql_parts = [f"SELECT {col_list} FROM ship_countries WHERE usps_svc_code = ?"]
     params.append(service.upper())
+
     if country:
-        sql_parts.append("AND ( cc2 = ? OR country_name = ? OR cc3 = ?)")
+        sql_parts.append("AND ( cc2 = ? OR country_name = ? OR cc3 = ? )")
         params.extend([country.upper(), country.capitalize(), country.upper()])
+
     if price_group:
         sql_parts.append("AND usps_price_group = ?")
         params.append(price_group)
+
     sql_stmt = " ".join(sql_parts)
     params = tuple(params)
     log.debug(f"select_shipping_query: {sql_stmt} {params}")
