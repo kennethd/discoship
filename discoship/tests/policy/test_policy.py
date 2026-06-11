@@ -1,11 +1,15 @@
+import re
 
 import pytest
 
 from discoship.policy import policy
 from discoship.defs import USPS_SVC_FCPIS, USPS_SVC_PMI
 
+
+PG_FCPIS_AUSTRALIA = 12
 PG_FCPIS_INDIA = 10
 PG_FCPIS_INDONESIA = 4
+PG_PMI_AUSTRALIA = 12
 PG_PMI_INDIA = 6
 PG_PMI_INDONESIA = 6
 
@@ -19,6 +23,24 @@ def test_countries_for_price_group():
     pmi_countries = policy.countries_for_price_group(PG_PMI_INDIA, USPS_SVC_PMI)
     assert 'India' in pmi_countries
     assert 'Indonesia' in pmi_countries
+    # pg 12 is just AU & NZ for both FCPIS & PMI
+    pg12_fcpis = policy.countries_for_price_group(PG_FCPIS_AUSTRALIA)
+    assert pg12_fcpis == ['Australia', 'New Zealand']
+    pg12_pmi = policy.countries_for_price_group(PG_PMI_AUSTRALIA, USPS_SVC_PMI)
+    assert pg12_pmi == ['Australia', 'New Zealand']
+
+
+def test_country_name_from_code():
+    name = policy.country_name_from_code("nz")
+    assert name == 'New Zealand'
+
+    with pytest.raises(ValueError) as e:
+        _ = policy.country_name_from_code("KLD")
+    assert e.match("Country not found: KLD")
+
+    with pytest.raises(ValueError) as e:
+        _ = policy.country_name_from_code("")
+    assert e.match("country arg cannot be empty")
 
 
 def test_select_shipping_query():
@@ -48,7 +70,7 @@ def test_select_shipping_query():
         ])
         query, params = policy.select_shipping_query(country=country)
         assert query == expect
-        assert params == (USPS_SVC_FCPIS, country.upper(), country.capitalize(), country.upper())
+        assert params == (USPS_SVC_FCPIS, country, country, country)
 
     # valid service & price_group
     svc_pgs = [(USPS_SVC_FCPIS, PG_FCPIS_INDIA), (USPS_SVC_PMI, PG_PMI_INDIA)]
@@ -62,4 +84,23 @@ def test_select_shipping_query():
         assert query == expect
         assert params == (svc, pg)
 
+    # specify both country & price_group
+    svc_pgs = [(USPS_SVC_FCPIS, 'in', PG_FCPIS_INDIA), (USPS_SVC_PMI, 'in', PG_PMI_INDIA)]
+    for svc, country, pg in svc_pgs:
+        cols = ", ".join(policy.SVC_SELECT_LIST[svc])
+        expect = " ".join([
+            f"SELECT {cols} FROM ship_countries WHERE usps_svc_code = ?",
+            "AND ( cc2 = ? OR country_name = ? OR cc3 = ? )",
+            "AND usps_price_group = ?",
+        ])
+        query, params = policy.select_shipping_query(service=svc,
+        country=country, price_group=pg)
+        assert query == expect
+        assert params == (svc, country, country, country, pg)
+
+    # specify mismatched country & price_group
+    with pytest.raises(ValueError) as e:
+        policy.select_shipping_query(country='IN', price_group=PG_FCPIS_AUSTRALIA)
+    msg = f"IN (India) not in FCPIS price group {PG_FCPIS_AUSTRALIA}"
+    assert e.match(re.escape(msg))
 

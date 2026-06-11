@@ -15,6 +15,31 @@ $ sqlite3 discoship/data/discoship.db "select COUNT(*) from discogs_destination_
 simplest option: map aliases to "canonical" spellings at insert time:
 """
 
+# (venv-discoship) kenneth@fado ~/git/discoship (create-policy) $ discoship ingest countries --iso3166
+#  ['British Virgin Islands', 'Virgin Islands (British)'],
+#  ['Burma', 'Myanmar'],
+#  ['Cape Verde', 'Cabo Verde'],
+#  ['Caribbean Netherlands', 'Bonaire, Sint Eustatius and Saba'],
+#  ['China, The Republic of', 'Taiwan (Province of China)'],
+#  ["Democratic People's Republic of Korea", "Korea, The Democratic People's Republic of"],
+#  ['Democratic Republic of the Congo', 'Congo, The Democratic Republic of the'],
+#  ['East Timor', 'Timor-Leste'],
+#  ['Great Britain', 'United Kingdom, The'],
+#  ['Holland', 'Netherlands'],
+#  ['Ivory Coast', "Côte d'Ivoire"],
+#  ['Jan Mayen', 'Svalbard and Jan Mayen'],
+#  ['North Korea', "Korea, The Democratic People's Republic of"],
+#  ["People's Republic of China", 'China'],
+#  ['Taiwan', 'Taiwan (Province of China)'],
+#  ['Republic of Korea', 'Korea, The Republic of'],
+#  ['Republic of the Congo', 'Congo, The'],
+#  ['Saba', 'Bonaire, Sint Eustatius and Saba'],
+#  ['Sahrawi Arab Democratic Republic', 'Western Sahara'],
+#  ['Sint Eustatius', 'Bonaire, Sint Eustatius and Saba'],
+#  ['South Korea', 'Korea, The Republic of'],
+#  ['United States Virgin Islands', 'Virgin Islands (U.S.)'],
+#  ['Vatican City', 'Holy See, The']
+
 COUNTRY_ALIASES = {
     "Azerbaidjan": "Azerbaijan",
     "Bolivia (Plurinational State of)": "Bolivia",

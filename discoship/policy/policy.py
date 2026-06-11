@@ -82,6 +82,32 @@ def countries_for_price_group(price_group, service=DEFAULT_SERVICE):
     return countries
 
 
+def country_name_from_code(country):
+    """returns string
+
+    performs case-insensitive look up of ISO3166 country name specified either
+    as name, code2, or code3
+
+    raises ValueError if country not found; some spellings can be tricky, try
+    `discoship list --countries`
+
+    >>> country_name_from_code('in')
+    'India'
+    >>> country_name_from_code('idn')
+    'Indonesia'
+    >>> country_name_from_code('australia')
+    'Australia'
+    """
+    if not country:
+        raise ValueError("country arg cannot be empty")
+    query = "SELECT name FROM iso3166_countries WHERE name = ? OR code2 = ? OR code3 = ?"
+    params = (country, country, country)
+    row = selectone(query, params)
+    if not row:
+        raise ValueError(f"Country not found: {country}")
+    return row['name']
+
+
 def select_shipping_query(service=DEFAULT_SERVICE, country=None, price_group=None):
     """returns SQL statement for policy rate table, and tuple of params
 
@@ -108,7 +134,7 @@ def select_shipping_query(service=DEFAULT_SERVICE, country=None, price_group=Non
 
     if country:
         sql_parts.append("AND ( cc2 = ? OR country_name = ? OR cc3 = ? )")
-        params.extend([country.upper(), country.capitalize(), country.upper()])
+        params.extend([country, country, country])
 
     if price_group:
         sql_parts.append("AND usps_price_group = ?")
