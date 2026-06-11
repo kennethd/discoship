@@ -147,12 +147,6 @@ def select_shipping_query(service=DEFAULT_SERVICE, country=None, price_group=Non
 
 
 
-# {'country_name': 'India', 'cc2': 'IN', 'cc3': 'IND',
-#  'usps_svc_name': "First-Class Package Int'l", 'usps_svc_code': 'FCPIS',
-#  'usps_price_group': 10,
-#  'svc_max_weight_oz': 64, 'svc_max_value': 400.0,
-#  'rate_1lp': 34.8, 'rate_2lp': 50.15, 'rate_3lp': 50.15, 'rate_4lp': 68.65, 'rate_5lp': 68.65,
-#  'max_weight_lbs': 'N/A', 'flat_rate_price_group': 'N/A'}
 POLICY_TMPL_FCPIS = """
 
     USPS First Class Package Int'l (FCPIS)

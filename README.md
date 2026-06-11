@@ -121,6 +121,67 @@ discoship config --dump | grep last_ingest
 
 ### Generate policies
 
+To generate a policy for a country, you can specify the ISO3166 country code:
+```sh
+$ discoship policy --country in
+
+    USPS First Class Package Int'l (FCPIS)
+    FCPIS Price Group: 10
+    Rates last updated: 2026-06-11 07:13:32 (UTC)
+    Countries: India
+
+    There are two rates to choose from for FCPIS, registered or not:
+
+    NOT Registered:
+
+    Qty LPs:                       1 LP    2-3 LPs*    4-5 LPs
+    -------------------------+----------+----------+----------+
+    Base Shipping            |    34.80 |    50.15 |    68.65 |
+    -------------------------+----------+----------+----------+
+    Packaging/Materials Fee  |     1.50 |     1.50 |     1.50 |
+    -------------------------+----------+----------+----------+
+    Certificate of Mailing   |     2.50 |     2.50 |     2.50 |
+    -------------------------+----------+----------+----------+
+    TOTAL                    |    38.80 |    54.15 |    72.65 |
+    -------------------------+----------+----------+----------+
+
+    REGISTERED
+
+    Qty LPs:                       1 LP    2-3 LPs*    4-5 LPs
+    -------------------------+----------+----------+----------+
+    Base Shipping            |    34.80 |    50.15 |    68.65 |
+    -------------------------+----------+----------+----------+
+    Packaging/Materials Fee  |     1.50 |     1.50 |     1.50 |
+    -------------------------+----------+----------+----------+
+    Registered**             |    22.00 |    22.00 |    22.00 |
+    -------------------------+----------+----------+----------+
+    TOTAL                    |    58.30 |    73.65 |    92.15 |
+    -------------------------+----------+----------+----------+
+
+    *  Weights for 2 * 1LPs packed up vary, but are very close to
+       price group boundary of 32oz (and double-LPs even more so),
+       if you are ordering 2LPs it is probably worth it to reach out
+       to me and ask me to pack up your order & edit real shipping
+       cost before paying for your order, could save you ~$24
+
+    ** International Registered Mail means different things for
+       different countries, see
+       https://www.usps.com/international/insurance-extra-services.htm
+```
+Base Shipping is actual USPS rate, determined by weights of records packed up
+in mailers, and mapped to the FCPIS rate classes.  1 LP boxed up weighs ~20oz,
+which is firmly in the 16-32oz range for that weight class, as mentioned @
+first asterisk, 2xLPs boxed up weighs very close to the 32oz border between
+1 & 2-3LP rates, so I try to offer to try to box it up before payment & check
+the actual weight.
+
+Packing materials, certificate of mailing, and registered fees are all
+configurable via the `discoship config` subcommand.  $1.50 is on the low side
+even for the dead basic boxes I buy -- if you buy fancy ones, you might want to
+up that.  Certificate of mailing always seems like a scammy sort of receipt
+from USPS, but as a seller I feel better buying one, you can set it to $0 in
+the config if you don't use them.
+
 
 ## configs
 
