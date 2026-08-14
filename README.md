@@ -91,7 +91,8 @@ package at all in the case of it becoming "lost in the mail".  It's a small
 enough fee ($2.50 at time of writing) that as sender, I feel it to be worth it.
 
 *FCPIS* is the default policy, so you can omit the `--service FCPIS` argument.
-To generate a policy for a country, you only have to specify the ISO3166 country code:
+To generate a policy for a country, you only have to specify the 
+[ISO3166 country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes):
 ```sh
 $ discoship policy --country in
 
