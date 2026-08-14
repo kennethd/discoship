@@ -93,6 +93,8 @@ enough fee ($2.50 at time of writing) that as sender, I feel it to be worth it.
 *FCPIS* is the default policy, so you can omit the `--service FCPIS` argument.
 To generate a policy for a country, you only have to specify the 
 [ISO3166 country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes):
+
+***Note, example output is from June 2026, this is not necessarily today's rate***
 ```sh
 $ discoship policy --country in
 
