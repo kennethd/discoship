@@ -1,5 +1,5 @@
 # discoship
-Create international shipping policies for discogs.com
+Create international shipping policies for [discogs.com](https://www.discogs.com/)
 ```
 @@@@@@@@@@@@@@@        @@@@@@@@
 @@@@@@@@@@@@@@@@@@     @@@@@@@@
@@ -38,90 +38,60 @@ Create international shipping policies for discogs.com
 ^^^   ^^^^          ^^^^^^^^^^^^          ^^^^     ^^       ^^^^^    ^^       ^^^^^
 ```
 
+International shipping is expensive, and errors can be costly.  The goal of
+this package is to make rate calculations a little less error-prone,
+particularly for those of us who don't do it very often.
+
+Initially I expected the [Discogs API](https://www.discogs.com/developers) to
+allow creating & managing shipping policies, but that seems not to be the
+case, so the best this project can do is generate pricing tables for the 20
+Country Price Groups **USPS** uses to determine rates for international
+packages, which sellers can use as a guide when manually creating policies.
+
+It's probably wise on their part to not allow using their API that way, their
+policies are already kind of confusing and fragile, and it would probably
+cause a ton of problems & service requests.
+
+## Usage
+I am personally just getting used to the issues involved with international
+shipping, so don't have it enabled by default in [my store](https://www.discogs.com/seller/kennethd/profile),
+but I am frequently asked if I will do it for a specific item, so this package
+is useful when I get such requests because I just do:
+```sh
+$ discoship ingest usps --all
+```
+to update the rate tables, then generate a policy for the country in question:
+```sh
+$ discoship policy --country in --service FCPIS
+```
+which gives me a pricing table for that USPS service, for that country.
+
 ## USPS Shipping Policies
-USPS *FCPIS* & *PMI* services are the only rates currently generated.
+**USPS** *FCPIS* & *PMI* services are the only rates currently generated (even
+that is an exaggeration, *PMI* is still being worked on).
 
-So far, I personally only have experience with *FCPIS* (First Class Package Int'l).
+So far, I only have experience with sending *FCPIS* (First Class Package
+Int'l) packages.  *PMI* is Priority Mail International, and is maybe a bit
+faster, but is definitely considerably more expensive.
 
-Discogs does not currently allow creating shipping policies via their API, so
-the best this project can do is generate pricing tables for the 20 Country
-Price Groups USPS uses to determine rates for international packages, which US
-residents can use as a guide when manually creating policies.
-
-### USPS First-Class Package International Service
+### FCPIS: First-Class Package International Service
 
   * Assumes standard record mailer type boxes (12.5" x 12.5" x 0.5/1.0")
   * Max weight 4LBS (64OZ)
 
 The policy generator will create two price options for *FCPIS*: registered mail
 and not-registered.  What "registered" means for international packages varies
-by country, it is significantly more expensive, you can read more about it at
-https://faq.usps.com/articles/FAQ/What-is-Registered-Mail-International
+by country, it is significantly more expensive, you can read more about it
+[here](https://faq.usps.com/articles/FAQ/What-is-Registered-Mail-International)
 
 The other/non-registered *FCPIS* rate generated includes a small fee for a
-"Certificate of Mailing", which is a scammy sort of extra receipt service USPS
+"Certificate of Mailing", which is a scammy sort of extra receipt service **USPS**
 provides for senders to absolve them of accusations of not sending the
 package at all in the case of it becoming "lost in the mail".  It's a small
 enough fee ($2.50 at time of writing) that as sender, I feel it to be worth it.
 
-### USPS Priority Mail Internationsl
-
-### USPS Priority Mail Express Internationsl
-
-
-## Developer Quickstart
-Originally, I expected to be able to create & manage shipping policies via the
-[Discogs API](https://www.discogs.com/developers/).  Unfortunately that
-functionality is not exposed; maybe it's for the best, it could cause a lot of headaches.
-
-### Dependencies
-The only dependency is [Python3](https://www.python.org/downloads/), and `bash`
-for the install script (which only creates a virtualenv & uses `pip` to install
-the package, so probably easy to work around for Windows users).  I think the
-oldest `python3` I've tested it with is `3.11`.
-
-### Install
-```sh
-$ git clone -o github git@github.com:kennethd/discoship.git
-$ cd discoship
-$ ./bin/install
-$ source ./venv-discoship/bin/activate
-$ which discoship
-```
-The last command should output something similar to `/home/kenneth/git/discoship/venv-discoship/bin/discoship`
-
-The install script will have installed some dev tools for testing, with the
-virtualenv activated run:
-```sh
-./bin/test
-```
-
-### Ingest
-You can now ingest all required data from USPS & populate discogs "ship-to
-countries" data:
-```sh
-$ discoship --info init --all
-```
-If anything fails, replacing `--info` with `--debug` might provide more insight.
-
-You can re-run specific pieces of the ingest process, see `discoship --help`
-and `discoship ingest --help`, `discoship ingest usps --help` etc
-
-### Periodic updates
-Because `discoship init --all` recreates the entire database from scratch,
-rate change info can be re-ingested specifically:
-```sh
-$ discoship --info ingest usps --all
-```
-
-To check when the rates were last updated, do:
-```sh
-discoship config --dump | grep last_ingest
-```
-
-### Generate policies
-
-To generate a policy for a country, you can specify the ISO3166 country code:
+*FCPIS* is the default policy, so you can omit the `--service FCPIS` argument.
+To generate a policy for a country, you only have to specify the ISO3166 country code:
 ```sh
 $ discoship policy --country in
 
@@ -162,7 +132,7 @@ $ discoship policy --country in
        price group boundary of 32oz (and double-LPs even more so),
        if you are ordering 2LPs it is probably worth it to reach out
        to me and ask me to pack up your order & edit real shipping
-       cost before paying for your order, could save you ~$24
+       cost before paying for your order, it could save you some money
 
     ** International Registered Mail means different things for
        different countries, see
@@ -181,6 +151,62 @@ for the dead basic boxes I buy -- if you buy fancy ones, you might want to
 up that.  Certificate of mailing always seems like a scammy sort of receipt
 from USPS, but as a seller I feel better buying one, you can set it to $0 in
 the config if you don't use them.
+
+
+### USPS Priority Mail Internationsl
+
+### USPS Priority Mail Express Internationsl
+
+
+## Developer Quickstart
+Originally, I expected to be able to create & manage shipping policies via the
+[Discogs API](https://www.discogs.com/developers/).  Unfortunately that
+functionality is not exposed; maybe it's for the best, it could cause a lot of headaches.
+
+### Dependencies
+The only dependency is [Python3](https://www.python.org/downloads/), and `bash`
+for the install script (which only creates a virtualenv & uses `pip` to
+install the package, so probably easy to work around for Windows users).  The
+oldest `python3` I've tested it with is `3.10`.
+
+### Install
+```sh
+$ git clone -o github git@github.com:kennethd/discoship.git
+$ cd discoship
+$ ./bin/install
+$ source ./venv-discoship/bin/activate
+$ which discoship
+```
+The last command should output something similar to `/home/kenneth/git/discoship/venv-discoship/bin/discoship`
+
+### Testing
+The install script will have installed some dev tools for testing, with the virtualenv activated run:
+```sh
+./bin/test
+```
+The script just invokes `pytest` with preferred args for the project.
+
+### Ingest
+You can now ingest all required data from USPS & populate discogs "ship-to countries" data:
+```sh
+$ discoship --info init --all
+```
+If anything fails, replacing `--info` with `--debug` might provide more insight.
+
+You can re-run specific pieces of the ingest process, see `discoship --help`
+and `discoship ingest --help`, `discoship ingest usps --help` etc
+
+### Periodic updates
+Because `discoship init --all` recreates the entire database from scratch,
+rate change info can be re-ingested specifically:
+```sh
+$ discoship --info ingest usps --all
+```
+
+To check when the rates were last updated, do:
+```sh
+discoship config --dump | grep last_ingest
+```
 
 
 ## configs
@@ -203,16 +229,26 @@ Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
 *PMI* prices have been ingested up to 10lbs.
 
 
-
 ## ROADMAP
 
   * Upon receiving my first int'l order, I noticed transaction fees are not applied
     to the subtotal only, but to shipping costs as well -- which comes to about
     50-60&cent; for a typical stateside order, but eating 9% of a $60 shipping
-    bill sucks, and inflates the PayPal fees further; considering adding a
+    bill sucks, and inflates the PayPal fees further, so I am considering adding a
     config option to compensate for fees on high int'l shipping costs
+  * Better CD support
 
 ## CHANGELOG
+
+### 2026-08-14: version 1.1.1
+<dl>
+  <dt>Re-ingested USPS rate data</dt>
+  <dd></dd>
+  <dt>Improved docs a bit</dt>
+  <dd></dd>
+  <dt>Added support for Python 3.10</dt>
+  <dd>Project had previously only been tested with >=3.11</dd>
+</dl>
 
 ### 2026-06-09: version 1.1.0
 <dl>
