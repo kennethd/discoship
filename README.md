@@ -171,6 +171,7 @@ install the package, so probably easy to work around for Windows users).  The
 oldest `python3` I've tested it with is `3.10`.
 
 ### Install
+Note, if you use https for git (rather than ssh), try `git clone -o github https://github.com/kennethd/discoship.git`
 ```sh
 $ git clone -o github git@github.com:kennethd/discoship.git
 $ cd discoship
