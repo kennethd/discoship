@@ -161,7 +161,7 @@ the config if you don't use them.
 
 ### PMI: Priority Mail Internationsl
 
-### PMIE: Priority Mail Express Internationsl
+### PMEI: Priority Mail Express Internationsl
 
 
 ## INSTALL
