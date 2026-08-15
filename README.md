@@ -52,11 +52,11 @@ It's probably wise on their part to not allow using their API that way, their
 policies are already kind of confusing and fragile, and it would probably
 cause a ton of problems & service requests.
 
-## Usage
+## USAGE
 I am personally just getting used to the issues involved with international
-shipping, so don't have it enabled by default in [my store](https://www.discogs.com/seller/kennethd/profile),
-but I am frequently asked if I will do it for a specific item, so this package
-is useful when I get such requests because I just do:
+shipping, so don't have it enabled by default in my store, but I am frequently
+asked if I will do it for a specific item, so this package is useful when I
+get such requests because I just do:
 ```sh
 $ discoship ingest usps --all
 ```
@@ -68,11 +68,14 @@ which gives me a pricing table for that USPS service, for that country.
 
 ## USPS Shipping Policies
 **USPS** *FCPIS* & *PMI* services are the only rates currently generated (even
-that is an exaggeration, *PMI* is still being worked on).
+that is an exaggeration, *PMI* is still being worked on).  There exists also a
+*PMI Express* which is even more expensive, and I will get to eventually.
 
 So far, I only have experience with sending *FCPIS* (First Class Package
-Int'l) packages.  *PMI* is Priority Mail International, and is maybe a bit
-faster, but is definitely considerably more expensive.
+Int'l) packages.  *PMI* is *Priority Mail International*, and is maybe a bit
+faster, but is definitely considerably more expensive.  In my experience, the
+cost of the relatively "budget" option *FCPIS* turns off most potential
+international buyers.
 
 ### FCPIS: First-Class Package International Service
 
@@ -161,7 +164,7 @@ the config if you don't use them.
 ### USPS Priority Mail Express Internationsl
 
 
-## Install
+## INSTALL
 ```sh
 $ git clone -o github git@github.com:kennethd/discoship.git
 $ cd discoship
@@ -183,8 +186,8 @@ oldest `python3` I've tested it with is `3.10`.
 
 ### Refresh Data
 `discoship` installs with a hopefully up-to-date database of rates & etc, but
-just to be sure, the first thing you do (and going forward, do regularly), is
-refresh the database with current **USPS** rates:
+just to be sure, the first thing you should do (and going forward, do
+regularly), is refresh the database with current **USPS** rates:
 ```sh
 $ discoship --info init --all
 ```
@@ -195,17 +198,21 @@ and `discoship ingest --help`, `discoship ingest usps --help` etc
 
 ### Periodic updates
 Because `discoship init --all` recreates the entire database from scratch,
-rate change info can be re-ingested specifically:
+including any config options you may have set, rate change info can be
+re-ingested specifically:
 ```sh
 $ discoship --info ingest usps --all
 ```
+
+## CONFIG
+
+There is a `discoship config` subcommand that allows you to view or set
+various options & metadata, see `discoship config --help`
 
 To check when the rates were last updated, do:
 ```sh
 discoship config --dump | grep last_ingest
 ```
-
-## configs
 
 ### Mapping record weights and USPS weight-based rate tables
 
