@@ -161,19 +161,7 @@ the config if you don't use them.
 ### USPS Priority Mail Express Internationsl
 
 
-## Developer Quickstart
-Originally, I expected to be able to create & manage shipping policies via the
-[Discogs API](https://www.discogs.com/developers/).  Unfortunately that
-functionality is not exposed; maybe it's for the best, it could cause a lot of headaches.
-
-### Dependencies
-The only dependency is [Python3](https://www.python.org/downloads/), and `bash`
-for the install script (which only creates a virtualenv & uses `pip` to
-install the package, so probably easy to work around for Windows users).  The
-oldest `python3` I've tested it with is `3.10`.
-
-### Install
-Note, if you use https for git (rather than ssh), try `git clone -o github https://github.com/kennethd/discoship.git`
+## Install
 ```sh
 $ git clone -o github git@github.com:kennethd/discoship.git
 $ cd discoship
@@ -183,15 +171,20 @@ $ which discoship
 ```
 The last command should output something similar to `/home/kenneth/git/discoship/venv-discoship/bin/discoship`
 
-### Testing
-The install script will have installed some dev tools for testing, with the virtualenv activated run:
-```sh
-./bin/test
-```
-The script just invokes `pytest` with preferred args for the project.
+Note, if you use `https` for git (rather than ssh), try `git clone -o github https://github.com/kennethd/discoship.git`
 
-### Ingest
-You can now ingest all required data from USPS & populate discogs "ship-to countries" data:
+Sorry, I don't know what the equivalent commands would be on Windows
+
+### Dependencies
+The only dependency is [Python3](https://www.python.org/downloads/), and `bash`
+for the install script (which only creates a virtualenv & uses `pip` to
+install the package, so probably easy to work around for Windows users).  The
+oldest `python3` I've tested it with is `3.10`.
+
+### Refresh Data
+`discoship` installs with a hopefully up-to-date database of rates & etc, but
+just to be sure, the first thing you do (and going forward, do regularly), is
+refresh the database with current **USPS** rates:
 ```sh
 $ discoship --info init --all
 ```
@@ -211,7 +204,6 @@ To check when the rates were last updated, do:
 ```sh
 discoship config --dump | grep last_ingest
 ```
-
 
 ## configs
 
