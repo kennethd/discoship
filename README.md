@@ -159,9 +159,9 @@ from USPS, but as a seller I feel better buying one, you can set it to $0 in
 the config if you don't use them.
 
 
-### USPS Priority Mail Internationsl
+### PMI: Priority Mail Internationsl
 
-### USPS Priority Mail Express Internationsl
+### PMIE: Priority Mail Express Internationsl
 
 
 ## INSTALL
