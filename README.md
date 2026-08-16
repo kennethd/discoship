@@ -22,11 +22,11 @@ Create international shipping policies for [discogs.com](https://www.discogs.com
 @@@@@@@@@@@@@@@@@@     @@@@@@@@  @@@@@@@@@@@@@@     @@@@@@@@@@@@@@      @@@@@@@@@@@@@@@@
 @@@@@@@@@@@@@@@        @@@@@@@@    @@@@@@@@@@@        @@@@@@@@@@       @@@@@@@@@@@@@@
                          __  o                            |            .'  @@@@@
-                        /  |/                         \   |   /                       ♪ 
-                      _/___|________        ♪      `.  .d88b.   .'       ♪ 
-                     /  _______   __\                 d888888b      ♪         ♪ 
-   _______          /  /_o_||__| |        --     --  (88888888)  --     --         ♪ 
-    \_\_\_\________/___          |           ♪        Y888888Y              ♪            ♪ 
+                        /  |/                         \   |   /                       ♪
+                      _/___|________        ♪      `.  .d88b.   .'       ♪
+                     /  _______   __\                 d888888b      ♪         ♪
+   _______          /  /_o_||__| |        --     --  (88888888)  --     --         ♪
+    \_\_\_\________/___          |           ♪        Y888888Y              ♪            ♪
              \         \_________|____________  ♪ .'   `Y88Y'   `.   ♪   _________
               \     ||                         ♪    ♪ /      \    `    ♪        ♪ |
                \  +_||_+   ()  ()     ♪  ┗(･o･)┛ ♪        ♪      ♪     ┌(･o･)┓    |
@@ -94,7 +94,7 @@ package at all in the case of it becoming "lost in the mail".  It's a small
 enough fee ($2.50 at time of writing) that as sender, I feel it to be worth it.
 
 *FCPIS* is the default policy, so you can omit the `--service FCPIS` argument.
-To generate a policy for a country, you only have to specify the 
+To generate a policy for a country, you only have to specify the
 [ISO3166 country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes):
 
 ***Note, example output is from June 2026, this is not necessarily today's rate***
@@ -162,6 +162,169 @@ the config if you don't use them.
 ### PMI: Priority Mail Internationsl
 
 ### PMEI: Priority Mail Express Internationsl
+
+
+## Updating Discogs Shipping Policies
+
+As of August 2026, navigate to *Account -> Settings* from the profile pic menu.
+Select *Seller* from the options on the left.  Scroll down to find the button
+labelled *Edit Shipping Policies*, Click *Add A Shipping Policy* (or if one
+exists for the destination, click on it to edit it).
+
+For example, let's create a policy for FCPIS Price Group 12 (Australia & New
+Zealand), `discoship` has provided us with these charts:
+```sh
+    USPS First Class Package Int'l (FCPIS)
+    FCPIS Price Group: 12
+    Rates last updated: 2026-08-14 13:47:24 (UTC)
+    Countries: Australia, New Zealand
+
+    There are two rates to choose from for FCPIS, registered or not:
+
+    NOT Registered:
+
+    Qty LPs:                       1 LP    2-3 LPs*    4-5 LPs
+    -------------------------+----------+----------+----------+
+    Base Shipping            |    46.05 |    65.25 |    79.10 |
+    -------------------------+----------+----------+----------+
+    Packaging/Materials Fee  |     1.50 |     1.50 |     1.50 |
+    -------------------------+----------+----------+----------+
+    Certificate of Mailing   |     2.50 |     2.50 |     2.50 |
+    -------------------------+----------+----------+----------+
+    TOTAL                    |    50.05 |    69.25 |    83.10 |
+    -------------------------+----------+----------+----------+
+
+    REGISTERED
+
+    Qty LPs:                       1 LP    2-3 LPs*    4-5 LPs
+    -------------------------+----------+----------+----------+
+    Base Shipping            |    46.05 |    65.25 |    79.10 |
+    -------------------------+----------+----------+----------+
+    Packaging/Materials Fee  |     1.50 |     1.50 |     1.50 |
+    -------------------------+----------+----------+----------+
+    Registered**             |    22.00 |    22.00 |    22.00 |
+    -------------------------+----------+----------+----------+
+    TOTAL                    |    69.55 |    88.75 |   102.60 |
+    -------------------------+----------+----------+----------+
+```
+### Select Country/Countries
+Use the wonky country selection menu to select the country or countries of
+interest, the policy title will update automatically to *"Your shipping policy
+for Australia, New Zealand"* as you select the countries.
+### Add Shipping Method(s)
+Click on *"Add a shipping method"*
+
+Select **Shipping Service**, options are *Economy*, *Standard*, and *Express*,
+I'm not sure if you are allowed to have more than one of each kind, provided
+they are named differently, the way I've done it so far is to create one of
+each:
+<dl>
+    <dt>Economy</dt>
+    <dd>USPS First-Class Package Int'l</dd>
+    <dt>Standard</dt>
+    <dd>USPS FCPIS REGISTERED</dd>
+    <dt>Express</dt>
+    <dd>USPS PMI *NOT* PMEI</dd>
+</dl>
+Though once **PMEI** is supported I might use that one for *Express* (since it
+is the name), and see if having two *Standard* rates with different names
+(*FCPIS REGISTERES* and *PMI*) will work.
+![screenshot of list of shipping policies](art/shipping-policies.png)
+### Edit Rates for Economy
+Select the shipping policy you want to set rates for, for example our *Economy* **FCPIS (not registered)** option
+
+Make sure the **Shipping Rates** option *"Set shipping price by"* is set to **quantity**
+
+And the `discoship` output should map pretty cleanly to 3 ranges (for **FCPIS**):
+<ul>
+    <li>**1** to **1** items -> **50.05**</li>
+    <li>**2** to **3** items -> **69.25**</li>
+    <li>**4** to **5** items -> **83.10**</li>
+</ul>
+![screenshot of Economy shipping policy](art/shipping-policy-economy.png)<br />
+
+#### Incomplete Shipping Policies
+If you try to save at this point you may see an error like:
+<div style="background-color:pink; border:1px solid black; margin:20px; padding:20px;">
+This shipping policy is incomplete, it is missing one shipping method that covers:
+
+All Order sizes - The final rate range must end with "and up" to handle any number of items or weights.
+</div>
+I remember now, this is why I added rudimentary support for *PEI*, you would
+think it would reasonably assume you only support shipping up to 5 items via this
+policy, especially **FCPIS** which caps at 64oz, but every policy has to have
+an option supporting *n* items, so...
+
+### Edit Rates for Standard
+Repeat the above to create a *Standard* policy, using the prices from the
+**FCPIS REGISTERED** table, and then create an open-ended policy for **PEI**,
+which will work for packages up to 66lbs
+
+### Edit Rates for Open-Ended PEI Option
+As of `discoship` version `1.1.1` the only way to see the **PMI** rates is to
+run in debug mode:
+```sh
+discoship --debug policy --country nz --service PMI
+```
+which will output this pricing data structure (among a bunch of other stuff):
+```python
+  {
+    'country_name': 'New Zealand',
+    'cc2': 'NZ',
+    'cc3': 'NZL',
+    'usps_svc_code': 'PMI',
+    'usps_price_group': 12,
+    'usps_svc_name': "Priority Mail Int'l",
+    'svc_max_weight_oz': 160,
+    'svc_max_value': 1025.0,
+    'rate_1lp': 77.95,
+    'rate_2lp': 86.8,
+    'rate_3lp': 86.8,
+    'rate_4lp': 96.8,
+    'rate_5lp': 96.8,
+    'rate_6lp': 106.65,
+    'rate_7lp': 106.65,
+    'rate_8lp': 130.85,
+    'rate_9lp': 139.55,
+    'rate_10lp': 139.55,
+    'rate_11lp': 148.5,
+    'rate_12lp': 157.3,
+    'rate_13lp': 157.3,
+    'rate_14lp': 166.15,
+    'rate_15lp': 166.15,
+    'rate_16lp': 166.15,
+    'max_weight_lbs': 66,
+    'flat_rate_price_group': 6
+  }
+```
+Use this data to populate the price table for the **PEI** policy, and be sure
+to leave the final item open-ended with the **and up** option, and an
+appropriate amount *per each added item*.  If the example seems a bit high,
+keep in mind that it's extremely unlikely anyone will ever use this option,
+and if somoehow they do, clearly they are not worried about pinching pennies.
+![screenshot of PEI shipping policy](art/shipping-policy-pei.png)<br />
+
+### Lack of ability to test policies
+Unfortunately, there doesn't seem to be a way to view your listings as a user
+from another counrty would see them (perhaps if you have a VPN you can select
+specific countries to route your traffic through), which is another reason I
+don't like to enable these policies unless I am communicating directly with a
+potential buyer & I can ask them, "you should see these rates, does it look
+like that?"
+
+### Update "Shipping Policy" Text on your seller page
+I only enable international policies for brief windows of time where I am
+communicating with the buyer already, so I don't leave these policies active
+after the sale (just toggle the green **Active** switch on your *Shipping
+Policies* settings page to the off position).
+
+If you do intend to enable your policies long-term, you should probably update
+your *Seller Terms* on your *Settings -> Seller* page to describe the policy.
+I don't know if Discogs allows you to use the HTML `<pre></pre>` tag for
+preformatted content, but if you paste the `discoship` rate tables you
+probably want to somehow make sure it is a monospace font.
+
+## USPS Price Groups
 
 
 ## INSTALL
@@ -242,6 +405,13 @@ Since *FCPIS* max weight is 64oz, I didn't go any higher than that, but for
   * Better CD support
 
 ## CHANGELOG
+
+
+### 2026-08-16: version 1.1.2
+<dl>
+  <dt>Added "Updating Shipping Policies" section to docs</dt>
+  <dd>Instructions for enabling & managing shipping policies (PEI support still rudimentary)</dd>
+</dl>
 
 ### 2026-08-14: version 1.1.1
 <dl>
