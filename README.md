@@ -66,6 +66,41 @@ $ discoship policy --country in --service FCPIS
 ```
 which gives me a pricing table for that USPS service, for that country.
 
+If you get some kind of "command not found" error, make sure the `discoship`
+virtualenv is active.
+
+## INSTALL
+```sh
+$ git clone -o github git@github.com:kennethd/discoship.git
+$ cd discoship
+$ ./bin/install
+$ source ./venv-discoship/bin/activate
+$ which discoship
+```
+The last command should output something similar to `/home/kenneth/git/discoship/venv-discoship/bin/discoship`
+
+Note, if you use `https` for git (rather than ssh), try `git clone -o github https://github.com/kennethd/discoship.git`
+
+Sorry, I don't know what the equivalent commands would be on Windows
+
+### Dependencies
+The only dependency is [Python3](https://www.python.org/downloads/), and `bash`
+for the install script (which only creates a virtualenv & uses `pip` to
+install the package, so probably easy to work around for Windows users).  The
+oldest `python3` I've tested it with is `3.10`.
+
+### Refresh Data
+`discoship` installs with a hopefully up-to-date database of rates & etc, but
+just to be sure, the first thing you should do (and going forward, do
+regularly), is refresh the database with current **USPS** rates:
+```sh
+$ discoship --info ingest usps --all
+```
+If anything fails, replacing `--info` with `--debug` might provide more insight.
+
+You can re-run specific pieces of the ingest process, see `discoship --help`
+and `discoship ingest --help`, `discoship ingest usps --help` etc
+
 ## USPS Shipping Policies
 **USPS** *FCPIS* & *PMI* services are the only rates currently generated (even
 that is an exaggeration, *PMI* is still being worked on).  There exists also a
@@ -172,7 +207,7 @@ labelled *Edit Shipping Policies*, Click *Add A Shipping Policy* (or if one
 exists for the destination, click on it to edit it).
 
 For example, let's create a policy for FCPIS Price Group 12 (Australia & New
-Zealand), `discoship` has provided us with these charts:
+Zealand), `discoship` provides us with these charts:
 ```sh
     USPS First Class Package Int'l (FCPIS)
     FCPIS Price Group: 12
@@ -226,6 +261,7 @@ each:
     <dt>Express</dt>
     <dd>USPS PMI *NOT* PMEI</dd>
 </dl>
+
 Though once **PMEI** is supported I might use that one for *Express* (since it
 is the name), and see if having two *Standard* rates with different names
 (*FCPIS REGISTERES* and *PMI*) will work.<br />
@@ -239,20 +275,20 @@ Make sure the **Shipping Rates** option *"Set shipping price by"* is set to **qu
 
 And the `discoship` output should map pretty cleanly to 3 ranges (for **FCPIS**):
 <ul>
-    <li>**1** to **1** items -> **50.05**</li>
-    <li>**2** to **3** items -> **69.25**</li>
-    <li>**4** to **5** items -> **83.10**</li>
+    <li>1 to 1 items -> 50.05</li>
+    <li>2 to 3 items -> 69.25</li>
+    <li>4 to 5 items -> 83.10</li>
 </ul>
 
 ![screenshot of Economy shipping policy](art/shipping-policy-economy.png)
 
 #### Incomplete Shipping Policies
 If you try to save at this point you may see an error like:
-<div style="background-color:pink; border:1px solid black; margin:20px; padding:20px;">
-This shipping policy is incomplete, it is missing one shipping method that covers:
 
-All Order sizes - The final rate range must end with "and up" to handle any number of items or weights.
-</div>
+*This shipping policy is incomplete, it is missing one shipping method that covers:<br />
+<br />
+All Order sizes - The final rate range must end with "and up" to handle any number of items or weights.*<br />
+
 I remember now, this is why I added rudimentary support for *PEI*, you would
 think it would reasonably assume you only support shipping up to 5 items via this
 policy, especially **FCPIS** which caps at 64oz, but every policy has to have
@@ -331,47 +367,6 @@ preformatted content, but if you paste the `discoship` rate tables you
 probably want to somehow make sure it is a monospace font.
 
 ## USPS Price Groups
-
-
-## INSTALL
-```sh
-$ git clone -o github git@github.com:kennethd/discoship.git
-$ cd discoship
-$ ./bin/install
-$ source ./venv-discoship/bin/activate
-$ which discoship
-```
-The last command should output something similar to `/home/kenneth/git/discoship/venv-discoship/bin/discoship`
-
-Note, if you use `https` for git (rather than ssh), try `git clone -o github https://github.com/kennethd/discoship.git`
-
-Sorry, I don't know what the equivalent commands would be on Windows
-
-### Dependencies
-The only dependency is [Python3](https://www.python.org/downloads/), and `bash`
-for the install script (which only creates a virtualenv & uses `pip` to
-install the package, so probably easy to work around for Windows users).  The
-oldest `python3` I've tested it with is `3.10`.
-
-### Refresh Data
-`discoship` installs with a hopefully up-to-date database of rates & etc, but
-just to be sure, the first thing you should do (and going forward, do
-regularly), is refresh the database with current **USPS** rates:
-```sh
-$ discoship --info init --all
-```
-If anything fails, replacing `--info` with `--debug` might provide more insight.
-
-You can re-run specific pieces of the ingest process, see `discoship --help`
-and `discoship ingest --help`, `discoship ingest usps --help` etc
-
-### Periodic updates
-Because `discoship init --all` recreates the entire database from scratch,
-including any config options you may have set, rate change info can be
-re-ingested specifically:
-```sh
-$ discoship --info ingest usps --all
-```
 
 ## CONFIG
 
