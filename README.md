@@ -228,8 +228,10 @@ each:
 </dl>
 Though once **PMEI** is supported I might use that one for *Express* (since it
 is the name), and see if having two *Standard* rates with different names
-(*FCPIS REGISTERES* and *PMI*) will work.
+(*FCPIS REGISTERES* and *PMI*) will work.<br />
+
 ![screenshot of list of shipping policies](art/shipping-policies.png)
+
 ### Edit Rates for Economy
 Select the shipping policy you want to set rates for, for example our *Economy* **FCPIS (not registered)** option
 
@@ -241,7 +243,8 @@ And the `discoship` output should map pretty cleanly to 3 ranges (for **FCPIS**)
     <li>**2** to **3** items -> **69.25**</li>
     <li>**4** to **5** items -> **83.10**</li>
 </ul>
-![screenshot of Economy shipping policy](art/shipping-policy-economy.png)<br />
+
+![screenshot of Economy shipping policy](art/shipping-policy-economy.png)
 
 #### Incomplete Shipping Policies
 If you try to save at this point you may see an error like:
@@ -299,10 +302,13 @@ which will output this pricing data structure (among a bunch of other stuff):
 ```
 Use this data to populate the price table for the **PEI** policy, and be sure
 to leave the final item open-ended with the **and up** option, and an
-appropriate amount *per each added item*.  If the example seems a bit high,
-keep in mind that it's extremely unlikely anyone will ever use this option,
-and if somoehow they do, clearly they are not worried about pinching pennies.
+appropriate amount *per each added item*. <br />
+
 ![screenshot of PEI shipping policy](art/shipping-policy-pei.png)<br />
+
+If the example seems a bit high for the **and up** option, keep in mind that
+it's extremely unlikely anyone will ever use this option, and if somoehow they
+do, clearly they are not worried about pinching pennies.
 
 ### Lack of ability to test policies
 Unfortunately, there doesn't seem to be a way to view your listings as a user
